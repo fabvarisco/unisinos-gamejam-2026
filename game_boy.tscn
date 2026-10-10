@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://huidsnip3knx"]
+
+[ext_resource type="PackedScene" uid="uid://iwps2ey2tqxg" path="res://Assets/gameboy/source/model.gltf" id="1_0p3ma"]
+
+[node name="GameBoy" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 0.30939877, 0.9509324, 0, -0.9509324, 0.30939877, 0, 0, 0)
+
+[node name="blockbench_export" parent="." instance=ExtResource("1_0p3ma")]
