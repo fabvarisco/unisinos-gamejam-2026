@@ -1,7 +1,7 @@
 extends Node2D
 
 const SPAWN := Vector2(160, 607)
-const LEVEL_COUNT := 6
+const LEVEL_COUNT := 9
 const MonsterScript := preload("res://minigames/platform/monsterPlatform.gd")
 const CoinScript := preload("res://minigames/platform/coinPlatform.gd")
 const PixelTransitionShader := preload("res://shaders/pixel_transition.gdshader")
@@ -121,8 +121,14 @@ func _coin_cells(index: int) -> Array[Vector2i]:
 			return [Vector2i(8, 9), Vector2i(12, 9), Vector2i(16, 10)]
 		5:
 			return [Vector2i(6, 9), Vector2i(10, 8), Vector2i(14, 9)]
-		_:
+		6:
 			return [Vector2i(6, 9), Vector2i(11, 10), Vector2i(14, 9)]
+		7:
+			return [Vector2i(5, 10), Vector2i(8, 10), Vector2i(11, 10), Vector2i(14, 10)]
+		8:
+			return [Vector2i(6, 8), Vector2i(8, 7), Vector2i(10, 8), Vector2i(13, 8)]
+		_:
+			return [Vector2i(5, 10), Vector2i(8, 10), Vector2i(11, 10), Vector2i(14, 10)]
 
 
 func _patrols(index: int) -> Array[Vector3]:

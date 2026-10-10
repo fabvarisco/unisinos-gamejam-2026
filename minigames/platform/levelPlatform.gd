@@ -30,8 +30,14 @@ func load_level(index: int) -> void:
 			_level_pipes()
 		5:
 			_level_islands()
-		_:
+		6:
 			_level_final()
+		7:
+			_level_gaps()
+		8:
+			_level_stairs_tight()
+		_:
+			_level_pillars()
 
 
 func _level_steps() -> void:
@@ -76,6 +82,37 @@ func _level_islands() -> void:
 	_row(13, 15, 9, GROUND)
 	_row(17, 19, 10, GROUND)
 	_goal_at(18, 10)
+
+
+func _level_gaps() -> void:
+	_row(0, 2, 10, GROUND)
+	_cell(5, 10, GROUND)
+	_cell(8, 10, GROUND)
+	_cell(11, 10, GROUND)
+	_cell(14, 10, GROUND)
+	_row(17, 19, 10, GROUND)
+	_goal_at(18, 10)
+
+
+func _level_stairs_tight() -> void:
+	_row(0, 2, 10, GROUND)
+	_cell(4, 9, GROUND)
+	_cell(6, 8, GROUND)
+	_cell(8, 7, GROUND)
+	_cell(10, 8, GROUND)
+	_cell(13, 8, GROUND)
+	_cell(15, 9, GROUND)
+	_row(17, 19, 10, GROUND)
+	_goal_at(18, 10)
+
+
+func _level_pillars() -> void:
+	_row(0, 2, 10, GROUND)
+	_cell(5, 10, GROUND)
+	_cell(8, 10, GROUND)
+	_cell(11, 10, GROUND)
+	_cell(14, 10, GROUND)
+	_goal_at(17, 10)
 
 
 func _level_final() -> void:

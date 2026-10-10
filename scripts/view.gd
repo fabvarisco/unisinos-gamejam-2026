@@ -4,9 +4,15 @@ extends Node3D
 @export var max_distance: float = 8.0
 @export var zoom_step: float = 0.12
 
+const _LINES: PackedStringArray = [
+	"Whoa, a video game. I wonder if this works? Maybe if I connect the batteries, it will turn on.",
+	"Drag the Game Boy to turn it around. Then drag each battery into its slot on the back.",
+]
+
 @onready var _camera: Camera3D = $Camera3D
 @onready var _console: Node3D = $Console
 @onready var _fade: ColorRect = $CanvasLayer/Fade
+@onready var _dialogue: PanelContainer = $CanvasLayer/Dialogue
 
 var _direction := Vector3.FORWARD
 var _distance := 3.2
@@ -17,6 +23,8 @@ func _ready() -> void:
 	_distance = _camera.position.length()
 	_direction = _camera.position / _distance
 	_console.place_batteries_out()
+	for battery_name in ["BatteryLeft", "BatteryRight"]:
+		_console.get_node(battery_name).inserted.connect(_on_battery_inserted)
 	_console.position.y = -4.0
 	_console.rotation.y = TAU * 3.0
 	var fade_material := _fade.material as ShaderMaterial
@@ -33,6 +41,16 @@ func _finish_intro() -> void:
 	_console.intro_playing = false
 	_console.reveal_batteries()
 	_fade.visible = false
+	_dialogue.start(_LINES)
+
+
+func _on_battery_inserted() -> void:
+	if not _dialogue.visible:
+		return
+	for battery_name in ["BatteryLeft", "BatteryRight"]:
+		if not _console.get_node(battery_name).installed:
+			return
+	_dialogue.close()
 
 
 func _input(event: InputEvent) -> void:

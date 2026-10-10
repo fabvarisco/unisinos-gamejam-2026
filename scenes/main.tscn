@@ -1,8 +1,21 @@
-[gd_scene load_steps=8 format=3 uid="uid://cyc8jkarejvuq"]
+[gd_scene load_steps=10 format=3 uid="uid://cyc8jkarejvuq"]
 
 [ext_resource type="PackedScene" uid="uid://bdmmg8ublxp6e" path="res://scenes/console.tscn" id="2_0wfyh"]
 [ext_resource type="Script" uid="uid://cd8dgj3te2a40" path="res://scripts/view.gd" id="2_view"]
 [ext_resource type="Shader" path="res://shaders/fade.gdshader" id="3_fade"]
+[ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="4_dialogue"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+bg_color = Color(0.03, 0.07, 0.04, 0.94)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.75, 0.95, 0.55, 1)
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.04, 0.045, 0.07, 1)
@@ -48,9 +61,50 @@ fov = 35.0
 [node name="ResetButton" type="Button" parent="CanvasLayer"]
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 128.0
+offset_right = 196.0
 offset_bottom = 52.0
 text = "Reset"
+
+[node name="Dialogue" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -210.0
+offset_right = -48.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
+script = ExtResource("4_dialogue")
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/Dialogue"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="CanvasLayer/Dialogue/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Body" type="Label" parent="CanvasLayer/Dialogue/Margin/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.86, 0.97, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+text = "Whoa."
+autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="CanvasLayer/Dialogue/Margin/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.55, 0.72, 0.45, 1)
+theme_override_font_sizes/font_size = 12
+text = "Click to continue"
+horizontal_alignment = 2
 
 [node name="Fade" type="ColorRect" parent="CanvasLayer"]
 anchors_preset = 15

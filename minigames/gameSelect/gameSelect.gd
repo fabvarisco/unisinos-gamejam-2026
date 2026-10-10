@@ -22,7 +22,7 @@ func _ready() -> void:
 	for name_index in _NAMES.size():
 		var label := Label.new()
 		label.position = Vector2(160, 160 + name_index * 100)
-		label.add_theme_font_size_override("font_size", 64)
+		label.add_theme_font_size_override("font_size", 28)
 		label.add_theme_color_override("font_color", Color(0.75, 0.95, 0.55))
 		layer.add_child(label)
 		_labels.append(label)
