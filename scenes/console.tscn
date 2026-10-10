@@ -1,0 +1,202 @@
+[gd_scene load_steps=23 format=3 uid="uid://bdmmg8ublxp6e"]
+
+[ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
+[ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://scenes/platform_game.tscn" id="2_buc2e"]
+[ext_resource type="Script" uid="uid://dafclsqhsee5d" path="res://scripts/screen.gd" id="3_uqctj"]
+[ext_resource type="Script" uid="uid://cwn2e2nitn78m" path="res://scripts/dpad_button.gd" id="4_y5tf0"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(1.5, 2.3, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.73, 0.76, 0.68, 1)
+roughness = 0.82
+
+[sub_resource type="BoxMesh" id="BoxMesh_bezel"]
+size = Vector3(1.15, 0.95, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bezel"]
+albedo_color = Color(0.16, 0.18, 0.16, 1)
+roughness = 0.7
+
+[sub_resource type="QuadMesh" id="BoxMesh_screen"]
+size = Vector2(1.05, 0.59)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_screen"]
+albedo_color = Color(0.04, 0.11, 0.07, 1)
+metallic = 0.15
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_dpad"]
+size = Vector3(0.12, 0.12, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dpad"]
+albedo_color = Color(0.22, 0.2, 0.24, 1)
+roughness = 0.65
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dpad"]
+size = Vector3(0.12, 0.12, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_button"]
+size = Vector3(0.14, 0.14, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a"]
+albedo_color = Color(0.75, 0.28, 0.26, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b"]
+albedo_color = Color(0.28, 0.36, 0.72, 1)
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_start"]
+size = Vector3(0.26, 0.07, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_start"]
+albedo_color = Color(0.45, 0.42, 0.38, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_battery"]
+size = Vector3(0.28, 0.72, 0.14)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_battery"]
+albedo_color = Color(0.82, 0.78, 0.48, 1)
+metallic = 0.35
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_connector"]
+size = Vector3(0.14, 0.16, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_connector"]
+albedo_color = Color(0.78, 0.64, 0.28, 1)
+metallic = 0.6
+roughness = 0.4
+
+[node name="Console" type="Node3D"]
+script = ExtResource("1_tk5gh")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_body")
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="ScreenBezel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.29)
+mesh = SubResource("BoxMesh_bezel")
+surface_material_override/0 = SubResource("StandardMaterial3D_bezel")
+
+[node name="ScreenViewport" type="SubViewport" parent="."]
+handle_input_locally = false
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+
+[node name="Background" type="ColorRect" parent="ScreenViewport"]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.04, 0.11, 0.07, 1)
+
+[node name="PlatformGame" parent="ScreenViewport" instance=ExtResource("2_buc2e")]
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.35)
+mesh = SubResource("BoxMesh_screen")
+surface_material_override/0 = SubResource("StandardMaterial3D_screen")
+script = ExtResource("3_uqctj")
+
+[node name="Dpad" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, -0.42, 0.29)
+
+[node name="Left" type="StaticBody3D" parent="Dpad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0, 0)
+collision_mask = 0
+script = ExtResource("4_y5tf0")
+direction = Vector2(-1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Dpad/Left"]
+mesh = SubResource("BoxMesh_dpad")
+surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="Collision" type="CollisionShape3D" parent="Dpad/Left"]
+shape = SubResource("BoxShape3D_dpad")
+
+[node name="Right" type="StaticBody3D" parent="Dpad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 0, 0)
+collision_mask = 0
+script = ExtResource("4_y5tf0")
+direction = Vector2(1, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Dpad/Right"]
+mesh = SubResource("BoxMesh_dpad")
+surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="Collision" type="CollisionShape3D" parent="Dpad/Right"]
+shape = SubResource("BoxShape3D_dpad")
+
+[node name="Up" type="StaticBody3D" parent="Dpad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+collision_mask = 0
+script = ExtResource("4_y5tf0")
+direction = Vector2(0, -1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Dpad/Up"]
+mesh = SubResource("BoxMesh_dpad")
+surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="Collision" type="CollisionShape3D" parent="Dpad/Up"]
+shape = SubResource("BoxShape3D_dpad")
+
+[node name="Down" type="StaticBody3D" parent="Dpad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.14, 0)
+collision_mask = 0
+script = ExtResource("4_y5tf0")
+direction = Vector2(0, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Dpad/Down"]
+mesh = SubResource("BoxMesh_dpad")
+surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="Collision" type="CollisionShape3D" parent="Dpad/Down"]
+shape = SubResource("BoxShape3D_dpad")
+
+[node name="ButtonA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, -0.28, 0.29)
+mesh = SubResource("BoxMesh_button")
+surface_material_override/0 = SubResource("StandardMaterial3D_a")
+
+[node name="ButtonB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, -0.48, 0.29)
+mesh = SubResource("BoxMesh_button")
+surface_material_override/0 = SubResource("StandardMaterial3D_b")
+
+[node name="Start" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, -0.78, 0.275)
+mesh = SubResource("BoxMesh_start")
+surface_material_override/0 = SubResource("StandardMaterial3D_start")
+
+[node name="BatteryLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.013, -0.603, -0.32)
+mesh = SubResource("BoxMesh_battery")
+surface_material_override/0 = SubResource("StandardMaterial3D_battery")
+
+[node name="BatteryRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.0125949085, -0.92548096, -0.32)
+mesh = SubResource("BoxMesh_battery")
+surface_material_override/0 = SubResource("StandardMaterial3D_battery")
+
+[node name="ConnectorDpad" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.72, -0.31)
+mesh = SubResource("BoxMesh_connector")
+surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+
+[node name="ConnectorA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.72, -0.31)
+mesh = SubResource("BoxMesh_connector")
+surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+
+[node name="ConnectorB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.72, -0.31)
+mesh = SubResource("BoxMesh_connector")
+surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+
+[node name="ConnectorStart" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.72, -0.31)
+mesh = SubResource("BoxMesh_connector")
+surface_material_override/0 = SubResource("StandardMaterial3D_connector")
