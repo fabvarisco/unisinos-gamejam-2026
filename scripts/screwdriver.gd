@@ -4,7 +4,6 @@ const TIP := Vector3(0.23, 0.0, 0.0)
 const SNAP_DISTANCE := 0.22
 
 var held := false
-var stuck := false
 var seated_pad: Node3D = null
 
 var _grab: StaticBody3D
@@ -23,17 +22,11 @@ func _ready() -> void:
 
 
 func try_grab(collider: Object) -> bool:
-	if stuck or collider != _grab:
+	if collider != _grab:
 		return false
 	held = true
 	seated_pad = null
 	return true
-
-
-func stick() -> void:
-	stuck = true
-	held = false
-	_grab.collision_layer = 0
 
 
 func drag_to(world_point: Vector3) -> void:

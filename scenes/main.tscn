@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://cyc8jkarejvuq"]
+[gd_scene load_steps=8 format=3 uid="uid://cyc8jkarejvuq"]
 
 [ext_resource type="PackedScene" uid="uid://bdmmg8ublxp6e" path="res://scenes/console.tscn" id="2_0wfyh"]
 [ext_resource type="Script" uid="uid://cd8dgj3te2a40" path="res://scripts/view.gd" id="2_view"]
+[ext_resource type="Shader" path="res://shaders/fade.gdshader" id="3_fade"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.04, 0.045, 0.07, 1)
@@ -19,6 +20,10 @@ ambient_light_source = 2
 ambient_light_color = Color(0.45, 0.48, 0.55, 1)
 ambient_light_energy = 0.45
 tonemap_mode = 2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fade"]
+shader = ExtResource("3_fade")
+shader_parameter/cover = 1.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("2_view")
@@ -46,5 +51,12 @@ offset_top = 16.0
 offset_right = 128.0
 offset_bottom = 52.0
 text = "Reset"
+
+[node name="Fade" type="ColorRect" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+material = SubResource("ShaderMaterial_fade")
 
 [connection signal="pressed" from="CanvasLayer/ResetButton" to="." method="_on_reset_pressed"]

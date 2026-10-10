@@ -15,6 +15,7 @@ var _shorted: Dictionary = {}
 var _dpad_locked := false
 var _locked_axis := Vector2.ZERO
 var _holding_a := false
+var intro_playing := true
 
 @onready var _camera: Camera3D = $"../Camera3D"
 @onready var _player: CharacterBody2D = $ScreenViewport/PlatformMinigame/PlayerPlatform
@@ -54,11 +55,28 @@ func _ready() -> void:
 	_add_blocker($Body)
 	for battery in _batteries:
 		battery.removed.connect(_refresh_energy)
+		battery.inserted.connect(_refresh_energy)
 	_refresh_energy()
 	_rest_position = position
 
 
+func place_batteries_out() -> void:
+	_batteries[0].place_out(Vector3(-1.22, -0.35, 0.02))
+	_batteries[1].place_out(Vector3(-1.22, -1.05, 0.02))
+	for battery in _batteries:
+		battery.set_shown(false)
+	_refresh_energy()
+
+
+func reveal_batteries() -> void:
+	for battery in _batteries:
+		if not battery.installed:
+			battery.set_shown(true)
+
+
 func _process(frame_delta: float) -> void:
+	if intro_playing:
+		return
 	_update_shake(frame_delta)
 	_keyboard_yaw(frame_delta)
 	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -127,7 +145,7 @@ func _keyboard_yaw(frame_delta: float) -> void:
 	var direction := 0.0
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		direction -= 1.0
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_RIGHT):
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		direction += 1.0
 	if direction == 0.0:
 		return
@@ -140,14 +158,20 @@ func _refresh_energy() -> void:
 		if battery.installed:
 			installed += 1
 	_energy_label.text = "%d%%" % (installed * 50)
+	$Screen.set_powered(installed > 0)
 
 
 func _try_grab_screwdriver(mouse: Vector2) -> bool:
 	var hit := _ray_hit(mouse)
 	if hit.is_empty():
 		return false
+	var pad_name := ""
+	if _screwdriver.seated_pad != null:
+		pad_name = _screwdriver.seated_pad.name
 	if not _screwdriver.try_grab(hit.collider):
 		return false
+	if pad_name != "":
+		_clear_short(pad_name)
 	_holding_screwdriver = true
 	return true
 
@@ -177,7 +201,6 @@ func _burn(pad_name: String) -> void:
 	if _shorted.has(pad_name):
 		return
 	_shorted[pad_name] = true
-	_screwdriver.stick()
 	_wire.block_pad(pad_name)
 	var hole := get_node("Back/%s/Hole" % pad_name) as MeshInstance3D
 	hole.material_override = _burned
@@ -187,6 +210,23 @@ func _burn(pad_name: String) -> void:
 			(info["mesh"] as MeshInstance3D).material_overlay = _overlay_red
 	_shake = SHAKE_TIME
 	_burst(pad_name)
+
+
+func _clear_short(pad_name: String) -> void:
+	if not _shorted.has(pad_name):
+		return
+	_shorted.erase(pad_name)
+	_wire.unblock_pad(pad_name)
+	var hole := get_node("Back/%s/Hole" % pad_name) as MeshInstance3D
+	hole.material_override = null
+	for body in _bodies:
+		var info: Dictionary = _bodies[body]
+		if info["pad"] == pad_name:
+			(info["mesh"] as MeshInstance3D).material_overlay = null
+	if pad_name == "PadDpad":
+		_dpad_locked = false
+		_locked_axis = Vector2.ZERO
+		_player.move_axis = Vector2.ZERO
 
 
 func _update_shake(delta: float) -> void:

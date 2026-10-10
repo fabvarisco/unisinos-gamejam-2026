@@ -1,12 +1,14 @@
 extends MeshInstance3D
 
 signal removed
+signal inserted
 
 var installed := true
 var held := false
 
 var _home := Transform3D.IDENTITY
 var _grab: StaticBody3D
+var _was_installed := false
 
 
 func _ready() -> void:
@@ -22,10 +24,25 @@ func _ready() -> void:
 
 
 func try_grab(collider: Object) -> bool:
-	if not installed or collider != _grab:
+	if not visible or collider != _grab:
 		return false
 	held = true
+	_was_installed = installed
+	if installed:
+		installed = false
+		removed.emit()
 	return true
+
+
+func place_out(local_origin: Vector3) -> void:
+	installed = false
+	transform.origin = local_origin
+	set_shown(true)
+
+
+func set_shown(on: bool) -> void:
+	visible = on
+	_grab.collision_layer = 1 if on else 0
 
 
 func drag_to(world_point: Vector3) -> void:
@@ -38,13 +55,18 @@ func release() -> void:
 	if not held:
 		return
 	held = false
-	if transform.origin.distance_to(_home.origin) > 0.45:
-		installed = false
-		visible = false
-		_grab.collision_layer = 0
+	if transform.origin.distance_to(_home.origin) <= 0.45:
+		transform = _home
+		installed = true
+		set_shown(true)
+		inserted.emit()
+		return
+	installed = false
+	if _was_installed:
+		set_shown(false)
 		removed.emit()
 		return
-	transform = _home
+	set_shown(true)
 
 
 func follow_point(mouse: Vector2, camera: Camera3D) -> Vector3:

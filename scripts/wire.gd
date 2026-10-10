@@ -201,6 +201,10 @@ func block_pad(pad_name: String) -> void:
 		_plugged = false
 
 
+func unblock_pad(pad_name: String) -> void:
+	blocked_pads.erase(pad_name)
+
+
 func _nearest_pad() -> Node3D:
 	var back := get_parent().get_parent()
 	var best: Node3D = null
