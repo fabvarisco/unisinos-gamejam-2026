@@ -60,6 +60,7 @@ func _ready() -> void:
 
 func _process(frame_delta: float) -> void:
 	_update_shake(frame_delta)
+	_keyboard_yaw(frame_delta)
 	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	var mouse := get_viewport().get_mouse_position()
 	_update_hover(mouse)
@@ -120,6 +121,17 @@ func _process(frame_delta: float) -> void:
 		return
 	var yaw: float = -delta.x * sensitivity
 	rotation = Vector3(0.0, rotation.y + yaw, 0.0)
+
+
+func _keyboard_yaw(frame_delta: float) -> void:
+	var direction := 0.0
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+		direction -= 1.0
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_RIGHT):
+		direction += 1.0
+	if direction == 0.0:
+		return
+	rotation = Vector3(0.0, rotation.y + direction * 1.8 * frame_delta, 0.0)
 
 
 func _refresh_energy() -> void:

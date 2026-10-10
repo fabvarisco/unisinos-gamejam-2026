@@ -1,21 +1,26 @@
-[gd_scene load_steps=7 format=3 uid="uid://qpek4jpi10x4"]
+[gd_scene load_steps=10 format=3 uid="uid://cggntn37o7i3x"]
 
 [ext_resource type="Texture2D" uid="uid://copboda4wtrp3" path="res://Assets/platformer/monochrome_tilemap.png" id="1_tiles"]
-[ext_resource type="Script" uid="uid://cplayerplat01" path="res://minigames/platform/playerPlatform.gd" id="2_player"]
-[ext_resource type="Script" uid="uid://clevelplat001" path="res://minigames/platform/levelPlatform.gd" id="3_level"]
-[ext_resource type="Shader" uid="uid://cchromaplat01" path="res://minigames/platform/chromaPlatform.gdshader" id="4_chroma"]
+[ext_resource type="Script" uid="uid://qnsh1e77fnsb" path="res://minigames/platform/playerPlatform.gd" id="2_player"]
+[ext_resource type="Script" uid="uid://d0obmpjkwihna" path="res://minigames/platform/levelPlatform.gd" id="3_level"]
+[ext_resource type="Shader" uid="uid://bi71568yc5lr1" path="res://minigames/platform/chromaPlatform.gdshader" id="4_chroma"]
+[ext_resource type="Script" path="res://minigames/platform/platformMinigame.gd" id="5_game"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(32, 40)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_player"]
+shader = ExtResource("4_chroma")
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_player"]
 atlas = ExtResource("1_tiles")
 region = Rect2(0, 204, 16, 16)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_player"]
-shader = ExtResource("4_chroma")
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(32, 53)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
+size = Vector2(160, 280)
 
 [node name="PlatformMinigame" type="Node2D"]
+script = ExtResource("5_game")
 
 [node name="LevelPlatform" type="TileMapLayer" parent="."]
 texture_filter = 1
@@ -25,8 +30,8 @@ script = ExtResource("3_level")
 [node name="PlayerPlatform" type="CharacterBody2D" parent="."]
 texture_filter = 1
 position = Vector2(160, 620)
-script = ExtResource("2_player")
 platform_floor_layers = 4294967041
+script = ExtResource("2_player")
 
 [node name="Sprite2D" type="Sprite2D" parent="PlayerPlatform"]
 texture_filter = 1
@@ -35,7 +40,16 @@ scale = Vector2(4, 4)
 texture = SubResource("AtlasTexture_player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerPlatform"]
+position = Vector2(0, 6.5)
 shape = SubResource("RectangleShape2D_player")
+
+[node name="Goal" type="Area2D" parent="."]
+position = Vector2(1100, 520)
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goal"]
+shape = SubResource("RectangleShape2D_goal")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 
@@ -47,8 +61,27 @@ offset_left = -280.0
 offset_top = 16.0
 offset_right = -24.0
 offset_bottom = 96.0
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.75, 0.95, 0.55, 1)
 theme_override_font_sizes/font_size = 64
 text = "100%"
 horizontal_alignment = 2
+
+[node name="DoneLabel" type="Label" parent="Hud"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -70.0
+offset_right = 420.0
+offset_bottom = 70.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.9, 1, 0.85, 1)
+theme_override_font_sizes/font_size = 72
+text = "Jogo concluído"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="body_entered" from="Goal" to="." method="_on_goal_body_entered"]

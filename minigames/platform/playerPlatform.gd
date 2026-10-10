@@ -9,8 +9,15 @@ var move_axis := Vector2.ZERO
 var _spawn := Vector2.ZERO
 
 
-func _ready() -> void:
-	_spawn = global_position
+func set_spawn(point: Vector2) -> void:
+	_spawn = point
+	global_position = point
+	velocity = Vector2.ZERO
+
+
+func respawn() -> void:
+	global_position = _spawn
+	velocity = Vector2.ZERO
 
 
 func try_jump() -> void:
@@ -24,5 +31,4 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_axis.x * speed
 	move_and_slide()
 	if global_position.y > 820.0:
-		global_position = _spawn
-		velocity = Vector2.ZERO
+		respawn()
