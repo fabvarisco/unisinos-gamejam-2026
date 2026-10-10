@@ -14,6 +14,8 @@ const SOUND_CONNECT := preload("res://Assets/sounds/connect circuit.wav")
 const SOUND_DISCONNECT := preload("res://Assets/sounds/disconnect circuit.wav")
 const SOUND_SHORT := preload("res://Assets/sounds/som encaixe da chave de curto.wav")
 const SOUND_BATTERY := preload("res://Assets/sounds/som pilhas.wav")
+const SOUND_ARC := preload("res://Assets/sounds/high voltage(2).wav")
+const ARC_GAP := 0.9
 
 @export var sensitivity: float = 0.01
 
@@ -65,6 +67,8 @@ var _volume_rest: Dictionary = {}
 var _volume_tweens: Dictionary = {}
 var _powered := false
 var _sparks: Dictionary = {}
+var _arc: AudioStreamPlayer
+var _arc_wait := 0.0
 var _hold_layer: CanvasLayer
 var _capture: SubViewport
 
@@ -107,6 +111,10 @@ func _ready() -> void:
 	_wire.plugged_in.connect(_play.bind(SOUND_CONNECT))
 	_wire.unplugged.connect(_play.bind(SOUND_DISCONNECT))
 	_screwdriver.snapped.connect(_play.bind(SOUND_SHORT))
+	_arc = AudioStreamPlayer.new()
+	_arc.stream = SOUND_ARC
+	_arc.finished.connect(_on_arc_finished)
+	add_child(_arc)
 	_refresh_energy()
 	_rest_position = position
 	_capture = SubViewport.new()
@@ -135,6 +143,7 @@ func reveal_batteries() -> void:
 func _process(frame_delta: float) -> void:
 	if intro_playing:
 		return
+	_tick_arc(frame_delta)
 	_update_shake(frame_delta)
 	_keyboard_yaw(frame_delta)
 	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -370,6 +379,7 @@ func _burn(pad_name: String) -> void:
 			(info["mesh"] as MeshInstance3D).material_overlay = _overlay_red
 	_shake = SHAKE_TIME
 	_start_sparks(pad_name)
+	_play_arc()
 
 
 func _clear_short(pad_name: String) -> void:
@@ -388,6 +398,9 @@ func _clear_short(pad_name: String) -> void:
 		_locked_axis = Vector2.ZERO
 		_player.move_axis = Vector2.ZERO
 	_stop_sparks(pad_name)
+	if _shorted.is_empty():
+		_arc_wait = 0.0
+		_arc.stop()
 
 
 func _update_shake(delta: float) -> void:
@@ -401,6 +414,27 @@ func _update_shake(delta: float) -> void:
 		randf_range(-1.0, 1.0),
 		randf_range(-0.35, 0.35)
 	) * 0.05 * strength
+
+
+func _play_arc() -> void:
+	if _arc.playing:
+		return
+	_arc_wait = 0.0
+	_arc.play()
+
+
+func _on_arc_finished() -> void:
+	if _shorted.is_empty():
+		return
+	_arc_wait = ARC_GAP
+
+
+func _tick_arc(delta: float) -> void:
+	if _arc_wait <= 0.0:
+		return
+	_arc_wait = maxf(_arc_wait - delta, 0.0)
+	if _arc_wait == 0.0 and not _shorted.is_empty():
+		_arc.play()
 
 
 func _start_sparks(pad_name: String) -> void:
