@@ -22,5 +22,6 @@ void fragment() {
 
 	vec4 from_col = texture(from_tex, sample_uv);
 	vec4 to_col = texture(to_tex, sample_uv);
-	COLOR = mix(from_col, to_col, progress);
+	float reveal = step(0.5, progress);
+	COLOR = mix(from_col, to_col, reveal);
 }

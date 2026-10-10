@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://copboda4wtrp3" path="res://Assets/platformer/monochrome_tilemap.png" id="1_tiles"]
 [ext_resource type="Script" uid="uid://cplayerplat01" path="res://minigames/platform/playerPlatform.gd" id="2_player"]
 [ext_resource type="Script" uid="uid://clevelplat001" path="res://minigames/platform/levelPlatform.gd" id="3_level"]
-[ext_resource type="Shader" uid="uid://bi71568yc5lr1" path="res://minigames/platform/chromaPlatform.gdshader" id="4_chroma"]
+[ext_resource type="Shader" uid="uid://cchromaplat01" path="res://minigames/platform/chromaPlatform.gdshader" id="4_chroma"]
 [ext_resource type="Script" uid="uid://y1c7yba45x8c" path="res://minigames/platform/platformMinigame.gd" id="5_game"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_player"]
@@ -17,7 +17,7 @@ region = Rect2(0, 204, 16, 16)
 size = Vector2(32, 53)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goal"]
-size = Vector2(92, 164)
+size = Vector2(82, 86)
 
 [node name="PlatformMinigame" type="Node2D"]
 script = ExtResource("5_game")
@@ -55,25 +55,132 @@ position = Vector2(1100, 520)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goal"]
-position = Vector2(75, 58)
+position = Vector2(-3, -7)
 shape = SubResource("RectangleShape2D_goal")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 
-[node name="DoneLabel" type="Label" parent="Hud"]
+[node name="Coins" type="Label" parent="Hud"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 420.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "Moedas: 0"
+
+[node name="EndScreen" type="Control" parent="Hud"]
 visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Black" type="ColorRect" parent="Hud/EndScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Title" type="Label" parent="Hud/EndScreen"]
+layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -420.0
-offset_top = -70.0
+offset_top = -150.0
 offset_right = 420.0
-offset_bottom = 70.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 72
 text = "Jogo concluído"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Deaths" type="Label" parent="Hud/EndScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -20.0
+offset_right = 420.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "Mortes: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Coins" type="Label" parent="Hud/EndScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = 50.0
+offset_right = 420.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "Moedas: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Time" type="Label" parent="Hud/EndScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = 130.0
+offset_right = 420.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "Tempo: 0:00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Confirm" type="Label" parent="Hud/EndScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = 210.0
+offset_right = 420.0
+offset_bottom = 290.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "Confirma"
 horizontal_alignment = 1
 vertical_alignment = 1
 

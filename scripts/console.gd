@@ -37,6 +37,8 @@ var _overlay_red: StandardMaterial3D
 var _burned: StandardMaterial3D
 var _shake := 0.0
 var _rest_position := Vector3.ZERO
+var _hold_layer: CanvasLayer
+var _capture: SubViewport
 
 const SHAKE_TIME := 0.34
 
@@ -58,14 +60,22 @@ func _ready() -> void:
 	_add_hitbox($Side/VolumePlus, "", true)
 	_add_hitbox($Side/VolumeMinus, "", true)
 	_add_blocker($Body)
-	_platform.visible = false
-	_platform.process_mode = Node.PROCESS_MODE_DISABLED
-	_game_select.opened.connect(_on_game_opened)
+	_game_select.set_shown(false)
+	_platform.begin()
+	_platform.visible = true
+	_platform.process_mode = Node.PROCESS_MODE_INHERIT
 	for battery in _batteries:
 		battery.removed.connect(_refresh_energy)
 		battery.inserted.connect(_refresh_energy)
 	_refresh_energy()
 	_rest_position = position
+	_capture = SubViewport.new()
+	_capture.name = "CaptureViewport"
+	_capture.size = Vector2i(1280, 720)
+	_capture.disable_3d = true
+	_capture.handle_input_locally = false
+	_capture.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(_capture)
 
 
 func place_batteries_out() -> void:
@@ -189,7 +199,7 @@ func _try_grab_screwdriver(mouse: Vector2) -> bool:
 
 
 func _update_jump() -> void:
-	if _opening or _menu_is_open():
+	if _opening or _menu_is_open() or _platform.is_finished():
 		return
 	var stuck: bool = _shorted.has("PadA")
 	var wired: bool = _holding_a and _wire.is_live("PadA")
@@ -208,13 +218,15 @@ func _press_front_button(mouse: Vector2) -> bool:
 		if _wire.is_live("PadA") or _shorted.has("PadA"):
 			_game_select.confirm()
 		return true
+	if pad_name == "PadA" and _platform.is_finished():
+		if _wire.is_live("PadA") or _shorted.has("PadA"):
+			_platform.restart()
+		return true
 	if pad_name == "PadA":
 		_holding_a = true
 	if pad_name == "PadStart":
 		if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == "PadStart":
 			_burn("PadStart")
-		if not _menu_is_open() and not _opening and (_wire.is_live("PadStart") or _shorted.has("PadStart")):
-			_return_to_menu()
 		return true
 	if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == pad_name:
 		_burn(pad_name)
@@ -366,10 +378,18 @@ func _play_open_transition() -> void:
 	await _game_select.hide_text()
 	await RenderingServer.frame_post_draw
 	var from_tex := _snapshot_screen()
+	freeze_screen(from_tex)
 	_game_select.set_shown(false)
+	_platform.begin()
 	_platform.visible = true
+	# #region agent log
+	_agent_log("A", "open scene swapped before cover", {"platform": _platform.visible, "menu": _game_select.visible, "covers": _cover_count()})
+	# #endregion
 	await RenderingServer.frame_post_draw
-	var to_tex := _snapshot_screen()
+	# #region agent log
+	_agent_log("C", "screen after open swap", {"freeze_size": str(_hold_size()), "screen": str(_screen_pixel(640, 360)), "frozen": str(_tex_pixel(from_tex, 640, 360))})
+	# #endregion
+	var to_tex := await photograph_screen()
 	await _play_pixel_transition(from_tex, to_tex)
 	_opening = false
 	_platform.process_mode = Node.PROCESS_MODE_INHERIT
@@ -380,17 +400,84 @@ func _return_to_menu() -> void:
 	_holding_a = false
 	_player.move_axis = Vector2.ZERO
 	var from_tex := _snapshot_screen()
+	freeze_screen(from_tex)
 	_platform.process_mode = Node.PROCESS_MODE_DISABLED
 	_platform.visible = false
 	_game_select.set_shown(true)
+	# #region agent log
+	_agent_log("A", "menu shown before cover", {"platform": _platform.visible, "menu": _game_select.visible, "covers": _cover_count()})
+	# #endregion
 	await RenderingServer.frame_post_draw
-	var to_tex := _snapshot_screen()
+	var to_tex := await photograph_screen()
 	await _play_pixel_transition(from_tex, to_tex)
 	await _game_select.show_text()
 	_opening = false
 
 
 func _play_pixel_transition(from_tex: ImageTexture, to_tex: ImageTexture) -> void:
+	var layer := _hold_layer
+	var cover := layer.get_child(0) as ColorRect
+	var material := cover.material as ShaderMaterial
+	material.set_shader_parameter("from_tex", from_tex)
+	material.set_shader_parameter("to_tex", from_tex)
+	material.set_shader_parameter("progress", 0.0)
+	material.set_shader_parameter("min_tiles", 24.0)
+	# #region agent log
+	_agent_log("B", "console cover added", {"size": str(cover.size), "progress": material.get_shader_parameter("progress")})
+	# #endregion
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.0, 0.5, 1.2)
+	await tween.finished
+	material.set_shader_parameter("from_tex", to_tex)
+	material.set_shader_parameter("to_tex", to_tex)
+	var reveal := create_tween()
+	reveal.set_trans(Tween.TRANS_SINE)
+	reveal.set_ease(Tween.EASE_IN_OUT)
+	reveal.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.5, 0.0, 1.2)
+	await reveal.finished
+	layer.queue_free()
+	_hold_layer = null
+
+
+func freeze_screen(from_tex: ImageTexture) -> void:
+	_drop_hold()
+	_hold_layer = _make_cover(from_tex, false)
+	$ScreenViewport.add_child(_hold_layer)
+
+
+func photograph_screen() -> ImageTexture:
+	var screen := $ScreenViewport as SubViewport
+	var moved: Array[Node] = []
+	var indexes: Array[int] = []
+	for child in screen.get_children():
+		if child is CanvasLayer and child.layer == 20:
+			continue
+		moved.append(child)
+		indexes.append(child.get_index())
+	for child in moved:
+		screen.remove_child(child)
+		_capture.add_child(child)
+	_capture.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	await RenderingServer.frame_post_draw
+	var image := _capture.get_texture().get_image()
+	_capture.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	for index in moved.size():
+		var child: Node = moved[index]
+		_capture.remove_child(child)
+		screen.add_child(child)
+		screen.move_child(child, indexes[index])
+	return ImageTexture.create_from_image(image)
+
+
+func _drop_hold() -> void:
+	if _hold_layer != null and is_instance_valid(_hold_layer):
+		_hold_layer.queue_free()
+	_hold_layer = null
+
+
+func _make_cover(from_tex: ImageTexture, level_blend: bool) -> CanvasLayer:
 	var layer := CanvasLayer.new()
 	layer.layer = 20
 	var cover := ColorRect.new()
@@ -398,16 +485,48 @@ func _play_pixel_transition(from_tex: ImageTexture, to_tex: ImageTexture) -> voi
 	var material := ShaderMaterial.new()
 	material.shader = PixelTransitionShader
 	material.set_shader_parameter("from_tex", from_tex)
-	material.set_shader_parameter("to_tex", to_tex)
+	material.set_shader_parameter("to_tex", from_tex)
 	material.set_shader_parameter("progress", 0.0)
+	if level_blend:
+		material.set_shader_parameter("min_tiles", 24.0)
 	cover.material = material
-	$ScreenViewport.add_child(layer)
 	layer.add_child(cover)
 	cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var tween := create_tween()
-	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.0, 1.0, 2.4)
-	await tween.finished
-	layer.queue_free()
+	return layer
+
+
+func _hold_size() -> Vector2:
+	if _hold_layer == null or not is_instance_valid(_hold_layer) or _hold_layer.get_child_count() == 0:
+		return Vector2.ZERO
+	return (_hold_layer.get_child(0) as ColorRect).size
+
+
+func _screen_pixel(x: int, y: int) -> Color:
+	return ($ScreenViewport as SubViewport).get_texture().get_image().get_pixel(x, y)
+
+
+func _tex_pixel(tex: ImageTexture, x: int, y: int) -> Color:
+	return tex.get_image().get_pixel(x, y)
+
+
+func _cover_count() -> int:
+	var count := 0
+	for child in $ScreenViewport.get_children():
+		if child is CanvasLayer and child.layer == 20:
+			count += 1
+	return count
+
+
+func _agent_log(hypothesis_id: String, message: String, data: Dictionary) -> void:
+	# #region agent log
+	var path := "/home/fabvarisco/Developer/unisinos-gamejam-2026/.cursor/debug-7bc056.log"
+	var file := FileAccess.open(path, FileAccess.READ_WRITE)
+	if file == null:
+		file = FileAccess.open(path, FileAccess.WRITE)
+	file.seek_end()
+	file.store_line(JSON.stringify({"sessionId": "7bc056", "hypothesisId": hypothesis_id, "location": "console.gd", "message": message, "data": data, "timestamp": Time.get_ticks_msec()}))
+	file.close()
+	# #endregion
 
 
 func _snapshot_screen() -> ImageTexture:

@@ -45,6 +45,8 @@ func confirm() -> void:
 func set_shown(on: bool) -> void:
 	visible = on
 	_backdrop.visible = on
+	for label in _labels:
+		label.visible = on
 
 
 func hide_text() -> void:

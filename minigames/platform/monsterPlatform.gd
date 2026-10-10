@@ -1,11 +1,19 @@
 extends CharacterBody2D
 
 const SPEED := 110.0
+const _FRAMES: Array[Rect2] = [
+	Rect2(0, 272, 16, 16),
+	Rect2(17, 272, 16, 16),
+	Rect2(34, 272, 16, 16),
+	Rect2(51, 272, 16, 16),
+]
 
 var left_limit := 0.0
 var right_limit := 0.0
 
 var _direction := 1.0
+var _anim_time := 0.0
+var _sprite: Sprite2D
 
 
 func _ready() -> void:
@@ -16,15 +24,16 @@ func _ready() -> void:
 	sprite.scale = Vector2(4, 4)
 	var atlas := AtlasTexture.new()
 	atlas.atlas = load("res://Assets/platformer/monochrome_tilemap.png")
-	atlas.region = Rect2(34, 204, 16, 16)
+	atlas.region = _FRAMES[0]
 	sprite.texture = atlas
+	_sprite = sprite
 	var material := ShaderMaterial.new()
 	material.shader = load("res://minigames/platform/chromaPlatform.gdshader")
 	sprite.material = material
 	add_child(sprite)
 	var shape_node := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
-	shape.size = Vector2(36, 40)
+	shape.size = Vector2(36, 50)
 	shape_node.shape = shape
 	add_child(shape_node)
 	var area := Area2D.new()
@@ -44,6 +53,11 @@ func _physics_process(delta: float) -> void:
 		velocity.y += 1400.0 * delta
 	velocity.x = _direction * SPEED
 	move_and_slide()
+	_anim_time += delta
+	var atlas := _sprite.texture as AtlasTexture
+	atlas.region = _FRAMES[int(_anim_time / 0.18) % _FRAMES.size()]
+	_sprite.texture = atlas
+	_sprite.flip_h = _direction < 0.0
 	if global_position.x < left_limit:
 		_direction = 1.0
 	elif global_position.x > right_limit:
