@@ -88,14 +88,14 @@ metallic = 0.35
 roughness = 0.5
 
 [sub_resource type="BoxMesh" id="BoxMesh_slot"]
-size = Vector3(0.8, 0.36, 0.05)
+size = Vector3(0.66, 0.22, 0.03)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot"]
 albedo_color = Color(0.05, 0.06, 0.05, 1)
 roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_slot_rim"]
-size = Vector3(0.92, 0.48, 0.025)
+size = Vector3(0.76, 0.32, 0.015)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot_rim"]
 shading_mode = 0
@@ -325,22 +325,22 @@ mesh = SubResource("BoxMesh_mark")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
 [node name="SlotLeft" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.603, -0.36)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.603, -0.3)
 mesh = SubResource("BoxMesh_slot")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot")
 
 [node name="Rim" type="MeshInstance3D" parent="SlotLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.01)
 mesh = SubResource("BoxMesh_slot_rim")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot_rim")
 
 [node name="SlotRight" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.925, -0.36)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.925, -0.3)
 mesh = SubResource("BoxMesh_slot")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot")
 
 [node name="Rim" type="MeshInstance3D" parent="SlotRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.01)
 mesh = SubResource("BoxMesh_slot_rim")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot_rim")
 

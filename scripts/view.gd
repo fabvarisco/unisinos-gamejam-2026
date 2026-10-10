@@ -6,7 +6,7 @@ extends Node3D
 
 const _LINES: PackedStringArray = [
 	"Whoa, a video game. I wonder if this works? Maybe if I connect the batteries, it will turn on.",
-	"Drag the Game Boy to turn it around. Then drag each battery into its slot on the back.",
+	"Press Turn to flip the Game Boy. Then drag each battery into its slot on the back.",
 ]
 
 @onready var _camera: Camera3D = $Camera3D
@@ -17,6 +17,7 @@ const _LINES: PackedStringArray = [
 var _direction := Vector3.FORWARD
 var _distance := 3.2
 var intro_playing := true
+var _spin: Tween
 
 
 func _ready() -> void:
@@ -72,7 +73,29 @@ func _set_distance(next: float) -> void:
 	_camera.position = _direction * _distance
 
 
+func _on_turn_pressed() -> void:
+	if intro_playing:
+		return
+	_stop_spin()
+	_console.spin_locked = true
+	var spin := create_tween()
+	_spin = spin
+	spin.tween_property(_console, "rotation:y", _console.rotation.y + PI, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	spin.finished.connect(func() -> void:
+		if _spin == spin:
+			_console.spin_locked = false
+	)
+
+
 func _on_reset_pressed() -> void:
 	if intro_playing:
 		return
+	_stop_spin()
 	_console.quaternion = Quaternion.IDENTITY
+
+
+func _stop_spin() -> void:
+	if _spin != null and _spin.is_valid():
+		_spin.kill()
+	_spin = null
+	_console.spin_locked = false

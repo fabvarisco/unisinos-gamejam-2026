@@ -6,12 +6,12 @@
 [ext_resource type="Script" path="res://scripts/dialogue_box.gd" id="4_dialogue"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
-bg_color = Color(0.03, 0.07, 0.04, 0.94)
+bg_color = Color(0.15294118, 0.16078432, 0.16078432, 1)
 border_width_left = 4
 border_width_top = 4
 border_width_right = 4
 border_width_bottom = 4
-border_color = Color(0.75, 0.95, 0.55, 1)
+border_color = Color(0.28627452, 0.27843137, 0.5254902, 1)
 content_margin_left = 20.0
 content_margin_top = 16.0
 content_margin_right = 20.0
@@ -65,6 +65,13 @@ offset_right = 196.0
 offset_bottom = 52.0
 text = "Reset"
 
+[node name="TurnButton" type="Button" parent="CanvasLayer"]
+offset_left = 16.0
+offset_top = 60.0
+offset_right = 196.0
+offset_bottom = 96.0
+text = "Turn"
+
 [node name="Dialogue" type="PanelContainer" parent="CanvasLayer"]
 visible = false
 anchors_preset = 12
@@ -93,7 +100,7 @@ theme_override_constants/separation = 12
 [node name="Body" type="Label" parent="CanvasLayer/Dialogue/Margin/Column"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.86, 0.97, 0.72, 1)
+theme_override_colors/font_color = Color(0.76862746, 0.74509805, 0.73333335, 1)
 theme_override_font_sizes/font_size = 16
 text = "Whoa."
 autowrap_mode = 3
@@ -101,7 +108,7 @@ autowrap_mode = 3
 [node name="Hint" type="Label" parent="CanvasLayer/Dialogue/Margin/Column"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.55, 0.72, 0.45, 1)
+theme_override_colors/font_color = Color(0.76862746, 0.74509805, 0.73333335, 1)
 theme_override_font_sizes/font_size = 12
 text = "Click to continue"
 horizontal_alignment = 2
@@ -114,3 +121,4 @@ mouse_filter = 2
 material = SubResource("ShaderMaterial_fade")
 
 [connection signal="pressed" from="CanvasLayer/ResetButton" to="." method="_on_reset_pressed"]
+[connection signal="pressed" from="CanvasLayer/TurnButton" to="." method="_on_turn_pressed"]

@@ -17,6 +17,7 @@ var _dpad_locked := false
 var _locked_axis := Vector2.ZERO
 var _holding_a := false
 var intro_playing := true
+var spin_locked := false
 var _menu_moved := false
 var _opening := false
 
@@ -159,11 +160,15 @@ func _process(frame_delta: float) -> void:
 	_last_mouse = mouse
 	if delta == Vector2.ZERO:
 		return
+	if spin_locked:
+		return
 	var yaw: float = -delta.x * sensitivity
 	rotation = Vector3(0.0, rotation.y + yaw, 0.0)
 
 
 func _keyboard_yaw(frame_delta: float) -> void:
+	if spin_locked:
+		return
 	var direction := 0.0
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		direction -= 1.0
