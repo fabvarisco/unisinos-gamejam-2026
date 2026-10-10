@@ -6,10 +6,12 @@ const DpadButtonScript := preload("res://scripts/dpad_button.gd")
 
 var _dragging := false
 var _pressing_dpad := false
+var _holding_wire := false
 var _last_mouse := Vector2.ZERO
 
 @onready var _camera: Camera3D = $"../Camera3D"
 @onready var _player: CharacterBody2D = $ScreenViewport/PlatformGame/CharacterBody2D
+@onready var _wire: Node3D = $Back/Mainboard/Wire
 
 
 func _ready() -> void:
@@ -24,16 +26,24 @@ func _process(_delta: float) -> void:
 	if not pressed:
 		_dragging = false
 		_pressing_dpad = false
+		_holding_wire = false
+		_wire.release()
 		_player.move_axis = Vector2.ZERO
 		return
-	if not _dragging and not _pressing_dpad:
+	if not _dragging and not _pressing_dpad and not _holding_wire:
 		if get_viewport().gui_get_hovered_control() != null:
+			return
+		if _wire.try_grab(mouse, _camera):
+			_holding_wire = true
 			return
 		if _dpad_axis(mouse) != Vector2.ZERO:
 			_pressing_dpad = true
 			return
 		_dragging = true
 		_last_mouse = mouse
+		return
+	if _holding_wire:
+		_wire.drag(mouse, _camera)
 		return
 	if _pressing_dpad:
 		_dpad_axis(mouse)
