@@ -40,4 +40,4 @@ func _on_body_entered(body: Node) -> void:
 	if not body.has_method("respawn"):
 		return
 	collected.emit()
-	queue_free()
+	call_deferred("queue_free")

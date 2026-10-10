@@ -106,6 +106,9 @@ func _restart_from_ending() -> void:
 	if run != _run:
 		return
 	var to_tex := await _photograph()
+	if from_tex == null or to_tex == null:
+		_finish_switch(false)
+		return
 	await _play_pixel(from_tex, to_tex)
 	if run != _run:
 		return
@@ -124,7 +127,7 @@ func _start_level(index: int) -> void:
 	_level = index
 	for child in get_children():
 		if child.get_script() == MonsterScript or child.get_script() == CoinScript:
-			child.queue_free()
+			child.call_deferred("queue_free")
 	_level_map.load_level(index)
 	_place_goal(_level_map.goal_cell())
 	_player.set_spawn(SPAWN)
@@ -183,9 +186,11 @@ func _above(cell: Vector2i) -> Vector2:
 func _place_goal(cell: Vector2i) -> void:
 	var goal := $Goal as Area2D
 	var shape_node := $Goal/CollisionShape2D as CollisionShape2D
-	shape_node.position = Vector2.ZERO
-	(shape_node.shape as RectangleShape2D).size = Vector2(76, 76)
-	goal.position = Vector2(cell.x * 64 + 32, cell.y * 64 + 32)
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(76, 76)
+	shape_node.set_deferred("position", Vector2.ZERO)
+	shape_node.set_deferred("shape", shape)
+	goal.set_deferred("position", Vector2(cell.x * 64 + 32, cell.y * 64 + 32))
 
 
 func _add_coin(spot: Vector2) -> void:
@@ -220,7 +225,7 @@ func notify_goal() -> void:
 	if _done or _switching:
 		return
 	_switching = true
-	_change_level()
+	_change_level.call_deferred()
 
 
 func _change_level() -> void:
@@ -250,11 +255,25 @@ func _change_level() -> void:
 	if run != _run:
 		return
 	var to_tex := await _photograph()
+	if from_tex == null or to_tex == null:
+		_finish_switch(_done)
+		return
 	await _play_pixel(from_tex, to_tex)
 	if run != _run:
 		return
 	_switching = false
 	if _done:
+		return
+	_player.velocity = Vector2.ZERO
+	_set_actors_active(true)
+
+
+func _finish_switch(finished: bool) -> void:
+	if _hold_layer != null and is_instance_valid(_hold_layer):
+		_hold_layer.queue_free()
+	_hold_layer = null
+	_switching = false
+	if finished:
 		return
 	_player.velocity = Vector2.ZERO
 	_set_actors_active(true)
@@ -307,6 +326,8 @@ func _agent_log(hypothesis_id: String, message: String, data: Dictionary) -> voi
 	var file := FileAccess.open(path, FileAccess.READ_WRITE)
 	if file == null:
 		file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return
 	file.seek_end()
 	file.store_line(JSON.stringify({"sessionId": "7bc056", "hypothesisId": hypothesis_id, "location": "platformMinigame.gd", "message": message, "data": data, "timestamp": Time.get_ticks_msec()}))
 	file.close()
@@ -338,18 +359,8 @@ func _photograph() -> ImageTexture:
 		remove_child(_hold_layer)
 		screen.add_child(_hold_layer)
 	var tex: ImageTexture = await host.photograph_screen()
-	# #region agent log
-	var shot := tex.get_image()
-	var found := ""
-	for y in range(520, 700, 4):
-		for x in range(560, 800, 4):
-			if shot.get_pixel(x, y).r > 0.8:
-				found = "%d,%d" % [x, y]
-				break
-		if found != "":
-			break
-	_agent_log("G", "dest block search", {"found": found, "floor": str(shot.get_pixel(200, 660))})
-	# #endregion
+	if tex == null:
+		return tex
 	if _hold_layer != null and is_instance_valid(_hold_layer) and _hold_layer.get_parent() == screen:
 		screen.remove_child(_hold_layer)
 		add_child(_hold_layer)
@@ -358,6 +369,8 @@ func _photograph() -> ImageTexture:
 
 func _snapshot() -> ImageTexture:
 	var image := get_viewport().get_texture().get_image()
+	if image == null:
+		return null
 	return ImageTexture.create_from_image(image)
 
 

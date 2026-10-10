@@ -638,6 +638,8 @@ func photograph_screen() -> ImageTexture:
 		_capture.remove_child(child)
 		screen.add_child(child)
 		screen.move_child(child, indexes[index])
+	if image == null:
+		return null
 	return ImageTexture.create_from_image(image)
 
 
@@ -693,6 +695,8 @@ func _agent_log(hypothesis_id: String, message: String, data: Dictionary) -> voi
 	var file := FileAccess.open(path, FileAccess.READ_WRITE)
 	if file == null:
 		file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return
 	file.seek_end()
 	file.store_line(JSON.stringify({"sessionId": "7bc056", "hypothesisId": hypothesis_id, "location": "console.gd", "message": message, "data": data, "timestamp": Time.get_ticks_msec()}))
 	file.close()
