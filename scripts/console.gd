@@ -62,6 +62,7 @@ var _volume_db := VOLUME_DB_MAX
 var _volume_pip_on: StandardMaterial3D
 var _volume_rest: Dictionary = {}
 var _volume_tweens: Dictionary = {}
+var _powered := false
 var _hold_layer: CanvasLayer
 var _capture: SubViewport
 
@@ -155,7 +156,7 @@ func _process(frame_delta: float) -> void:
 		if _opening or _menu_is_open():
 			_player.move_axis = Vector2.ZERO
 		else:
-			_player.move_axis = _locked_axis if _dpad_locked else Vector2.ZERO
+			_player.move_axis = _locked_axis if _powered and _dpad_locked else Vector2.ZERO
 		return
 	if not _dragging and not _pressing_dpad and not _pressing_button and not _holding_wire and _holding_battery == null and not _holding_screwdriver:
 		if get_viewport().gui_get_hovered_control() != null:
@@ -200,14 +201,14 @@ func _process(frame_delta: float) -> void:
 	_last_mouse = mouse
 	if delta == Vector2.ZERO:
 		return
-	if spin_locked:
+	if spin_locked or _dialogue_open():
 		return
 	var yaw: float = -delta.x * sensitivity
 	rotation = Vector3(0.0, rotation.y + yaw, 0.0)
 
 
 func _keyboard_yaw(frame_delta: float) -> void:
-	if spin_locked:
+	if spin_locked or _dialogue_open():
 		return
 	var direction := 0.0
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
@@ -217,6 +218,11 @@ func _keyboard_yaw(frame_delta: float) -> void:
 	if direction == 0.0:
 		return
 	rotation = Vector3(0.0, rotation.y + direction * 1.8 * frame_delta, 0.0)
+
+
+func _dialogue_open() -> bool:
+	var box := get_parent().get_node_or_null("CanvasLayer/Dialogue")
+	return box != null and box.visible
 
 
 func _on_battery_inserted() -> void:
@@ -237,8 +243,14 @@ func _refresh_energy() -> void:
 	for battery in _batteries:
 		if battery.installed:
 			installed += 1
+	_powered = installed > 0
 	_energy_label.text = "%d%%" % (installed * 50)
-	$Screen.set_powered(installed > 0)
+	$Screen.set_powered(_powered)
+	_platform.process_mode = Node.PROCESS_MODE_INHERIT if _powered else Node.PROCESS_MODE_DISABLED
+	if not _powered:
+		_holding_a = false
+		_player.move_axis = Vector2.ZERO
+		_player.velocity = Vector2.ZERO
 
 
 func _try_grab_screwdriver(mouse: Vector2) -> bool:
@@ -257,7 +269,7 @@ func _try_grab_screwdriver(mouse: Vector2) -> bool:
 
 
 func _update_jump() -> void:
-	if _opening or _menu_is_open() or _platform.is_finished():
+	if not _powered or _opening or _menu_is_open() or _platform.is_finished():
 		return
 	var stuck: bool = _shorted.has("PadA")
 	var wired: bool = _holding_a and _wire.is_live("PadA")
@@ -324,11 +336,11 @@ func _press_front_button(mouse: Vector2) -> bool:
 		return false
 	_play(SOUND_BUTTON)
 	if pad_name == "PadA" and _menu_is_open():
-		if _wire.is_live("PadA") or _shorted.has("PadA"):
+		if _powered and (_wire.is_live("PadA") or _shorted.has("PadA")):
 			_game_select.confirm()
 		return true
 	if pad_name == "PadA" and _platform.is_finished():
-		if _wire.is_live("PadA") or _shorted.has("PadA"):
+		if _powered and (_wire.is_live("PadA") or _shorted.has("PadA")):
 			_platform.restart()
 		return true
 	if pad_name == "PadA":
@@ -448,7 +460,7 @@ func _dpad_axis(mouse: Vector2) -> Vector2:
 
 
 func _on_dpad_pressed(direction: Vector2) -> void:
-	if _opening:
+	if not _powered or _opening:
 		return
 	if _menu_is_open():
 		if not _menu_moved and (_wire.is_live("PadDpad") or _shorted.has("PadDpad")):

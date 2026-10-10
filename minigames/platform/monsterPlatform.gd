@@ -42,7 +42,7 @@ func _ready() -> void:
 	area.body_entered.connect(_on_body_entered)
 	var area_shape := CollisionShape2D.new()
 	var area_box := RectangleShape2D.new()
-	area_box.size = Vector2(40, 44)
+	area_box.size = Vector2(40, 46)
 	area_shape.shape = area_box
 	area.add_child(area_shape)
 	add_child(area)

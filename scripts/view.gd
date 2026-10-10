@@ -8,6 +8,7 @@ const _LINES: PackedStringArray = [
 	"Whoa, a video game. I wonder if this works? Maybe if I connect the batteries, it will turn on.",
 	"Press Turn to flip the Game Boy. Then drag each battery into its slot on the back.",
 ]
+const _BACK_LINE := "Wow, so many circuits. But it looks like I need to connect the cable to them for them to work."
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _console: Node3D = $Console
@@ -18,6 +19,7 @@ var _direction := Vector3.FORWARD
 var _distance := 3.2
 var intro_playing := true
 var _spin: Tween
+var _seen_back := false
 
 
 func _ready() -> void:
@@ -74,7 +76,7 @@ func _set_distance(next: float) -> void:
 
 
 func _on_turn_pressed() -> void:
-	if intro_playing:
+	if intro_playing or _dialogue.visible:
 		return
 	_stop_spin()
 	_console.spin_locked = true
@@ -82,13 +84,18 @@ func _on_turn_pressed() -> void:
 	_spin = spin
 	spin.tween_property(_console, "rotation:y", _console.rotation.y + PI, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	spin.finished.connect(func() -> void:
-		if _spin == spin:
-			_console.spin_locked = false
+		if _spin != spin:
+			return
+		_console.spin_locked = false
+		if _seen_back:
+			return
+		_seen_back = true
+		_dialogue.start(PackedStringArray([_BACK_LINE]))
 	)
 
 
 func _on_reset_pressed() -> void:
-	if intro_playing:
+	if intro_playing or _dialogue.visible:
 		return
 	_stop_spin()
 	_console.quaternion = Quaternion.IDENTITY
