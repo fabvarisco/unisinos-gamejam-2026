@@ -203,9 +203,8 @@ func _on_coin_collected() -> void:
 
 
 func _refresh_coins() -> void:
-	var text := "Moedas: %d" % _coins
-	_coins_label.text = text
-	_coins_end_label.text = text
+	_coins_label.text = "Moedas: %d" % _coins
+	_coins_end_label.text = "Coins: %d" % _coins
 
 
 func _add_monster(x: float, left: float, right: float) -> void:
@@ -274,9 +273,9 @@ func _show_ending() -> void:
 	var elapsed := int((Time.get_ticks_msec() - _started_msec) / 1000.0)
 	var minutes := elapsed / 60
 	var seconds := elapsed % 60
-	_deaths_label.text = "Mortes: %d" % _player.deaths
+	_deaths_label.text = "Deaths: %d" % _player.deaths
 	_refresh_coins()
-	_time_label.text = "Tempo: %d:%02d" % [minutes, seconds]
+	_time_label.text = "Time: %d:%02d" % [minutes, seconds]
 	_end_screen.visible = true
 
 

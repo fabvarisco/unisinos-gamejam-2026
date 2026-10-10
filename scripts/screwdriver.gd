@@ -4,6 +4,8 @@ const TIP := Vector3(0.23, 0.0, 0.0)
 const BOARD_Z := -0.42
 const SNAP_DISTANCE := 0.32
 
+signal snapped
+
 var held := false
 var seated_pad: Node3D = null
 
@@ -57,6 +59,7 @@ func release() -> void:
 	var seated := pad.global_position - console.global_transform.basis * TIP
 	seated -= console.global_transform.basis.z * 0.06
 	global_position = seated
+	snapped.emit()
 
 
 func follow_point(mouse: Vector2, camera: Camera3D) -> Vector3:

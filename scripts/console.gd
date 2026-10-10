@@ -8,6 +8,11 @@ const VOLUME_DB_MIN := -40.0
 const VOLUME_DB_MAX := 0.0
 const VOLUME_DB_STEP := 4.0
 const VOLUME_PRESS := 0.014
+const SOUND_BUTTON := preload("res://Assets/sounds/button.wav")
+const SOUND_CONNECT := preload("res://Assets/sounds/connect circuit.wav")
+const SOUND_DISCONNECT := preload("res://Assets/sounds/disconnect circuit.wav")
+const SOUND_SHORT := preload("res://Assets/sounds/som encaixe da chave de curto.wav")
+const SOUND_BATTERY := preload("res://Assets/sounds/som pilhas.wav")
 
 @export var sensitivity: float = 0.01
 
@@ -95,7 +100,10 @@ func _ready() -> void:
 	_platform.process_mode = Node.PROCESS_MODE_INHERIT
 	for battery in _batteries:
 		battery.removed.connect(_refresh_energy)
-		battery.inserted.connect(_refresh_energy)
+		battery.inserted.connect(_on_battery_inserted)
+	_wire.plugged_in.connect(_play.bind(SOUND_CONNECT))
+	_wire.unplugged.connect(_play.bind(SOUND_DISCONNECT))
+	_screwdriver.snapped.connect(_play.bind(SOUND_SHORT))
 	_refresh_energy()
 	_rest_position = position
 	_capture = SubViewport.new()
@@ -161,6 +169,7 @@ func _process(frame_delta: float) -> void:
 			return
 		if _dpad_axis(mouse) != Vector2.ZERO:
 			_pressing_dpad = true
+			_play(SOUND_BUTTON)
 			return
 		if _adjust_volume(mouse):
 			_pressing_button = true
@@ -210,6 +219,19 @@ func _keyboard_yaw(frame_delta: float) -> void:
 	rotation = Vector3(0.0, rotation.y + direction * 1.8 * frame_delta, 0.0)
 
 
+func _on_battery_inserted() -> void:
+	_play(SOUND_BATTERY)
+	_refresh_energy()
+
+
+func _play(stream: AudioStream) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.finished.connect(player.queue_free)
+	add_child(player)
+	player.play()
+
+
 func _refresh_energy() -> void:
 	var installed := 0
 	for battery in _batteries:
@@ -252,6 +274,7 @@ func _adjust_volume(mouse: Vector2) -> bool:
 	_apply_master_volume()
 	_refresh_volume_pips()
 	_press_volume_button(mesh)
+	_play(SOUND_BUTTON)
 	return true
 
 
@@ -299,6 +322,7 @@ func _press_front_button(mouse: Vector2) -> bool:
 	var pad_name: String = _bodies[_body_for(mesh)]["pad"]
 	if pad_name == "" or pad_name == "PadDpad":
 		return false
+	_play(SOUND_BUTTON)
 	if pad_name == "PadA" and _menu_is_open():
 		if _wire.is_live("PadA") or _shorted.has("PadA"):
 			_game_select.confirm()

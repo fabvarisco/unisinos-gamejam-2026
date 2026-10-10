@@ -6,6 +6,9 @@ extends Node3D
 @export var rope_length := 0.62
 @export var gravity := 6.0
 
+signal plugged_in
+signal unplugged
+
 var held := false
 
 @onready var _tip: Node3D = $Tip
@@ -58,6 +61,8 @@ func try_grab(mouse: Vector2, camera: Camera3D) -> bool:
 	var hit := _raycast(mouse, camera)
 	if hit.is_empty() or hit.collider != _grab:
 		return false
+	if _plugged:
+		unplugged.emit()
 	held = true
 	_plugged = false
 	connected_pad = null
@@ -84,6 +89,7 @@ func release() -> void:
 		return
 	connected_pad = pad
 	_plugged = true
+	plugged_in.emit()
 	var local := to_local(pad.global_position)
 	_pinned = _clamp_to_board(local)
 	var last := point_count - 1

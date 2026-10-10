@@ -134,8 +134,8 @@ roughness = 0.92
 size = Vector3(0.8, 0.32, 0.006)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot_rim"]
+shading_mode = 0
 albedo_color = Color(0.03, 0.03, 0.03, 1)
-roughness = 1.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_battery"]
 size = Vector3(0.28, 0.72, 0.14)
@@ -341,12 +341,12 @@ surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
 shape = SubResource("BoxShape3D_dpad")
 
 [node name="ButtonA" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.42, -0.28, 0.29)
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.42, -0.28, 0.27233413)
 mesh = SubResource("CylinderMesh_button")
 surface_material_override/0 = SubResource("StandardMaterial3D_a")
 
 [node name="ButtonB" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.22, -0.48, 0.29)
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.22, -0.48, 0.26963332)
 mesh = SubResource("CylinderMesh_button")
 surface_material_override/0 = SubResource("StandardMaterial3D_b")
 
@@ -384,7 +384,7 @@ mesh = SubResource("BoxMesh_mark")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
 [node name="VolumePlus" type="MeshInstance3D" parent="Side"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.28, 0.02)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.77065676, 0.28, 0.02)
 mesh = SubResource("BoxMesh_volume")
 surface_material_override/0 = SubResource("StandardMaterial3D_side")
 
@@ -399,7 +399,7 @@ mesh = SubResource("BoxMesh_mark")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
 [node name="VolumeMinus" type="MeshInstance3D" parent="Side"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.1, 0.02)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7632715, 0.1, 0.02)
 mesh = SubResource("BoxMesh_volume")
 surface_material_override/0 = SubResource("StandardMaterial3D_side")
 
@@ -409,6 +409,7 @@ mesh = SubResource("BoxMesh_mark")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
 [node name="VolumeMeter" type="Node3D" parent="Side"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.034057617, 0, 0)
 
 [node name="Pip0" type="MeshInstance3D" parent="Side/VolumeMeter"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.36, 0.02)
