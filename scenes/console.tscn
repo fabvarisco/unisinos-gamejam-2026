@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://bdmmg8ublxp6e"]
+[gd_scene load_steps=48 format=3 uid="uid://bdmmg8ublxp6e"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
 [ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://scenes/platform_game.tscn" id="2_buc2e"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cwn2e2nitn78m" path="res://scripts/dpad_button.gd" id="4_y5tf0"]
 [ext_resource type="Script" uid="uid://bed4jfvpmeu0h" path="res://scripts/wire.gd" id="5_wire"]
 [ext_resource type="Script" uid="uid://353hdy8xnyly" path="res://scripts/battery.gd" id="6_battery"]
+[ext_resource type="Script" path="res://scripts/screwdriver.gd" id="7_driver"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_body"]
 size = Vector3(1.5, 2.3, 0.5)
@@ -130,6 +131,27 @@ size = Vector3(0.028, 1, 0.018)
 
 [sub_resource type="BoxMesh" id="BoxMesh_pad"]
 size = Vector3(0.16, 0.16, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_handle"]
+size = Vector3(0.12, 0.055, 0.055)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_handle"]
+albedo_color = Color(0.45, 0.28, 0.14, 1)
+roughness = 0.72
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_shaft"]
+size = Vector3(0.16, 0.018, 0.018)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_shaft"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+metallic = 0.85
+roughness = 0.28
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_tip"]
+size = Vector3(0.05, 0.012, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_cross"]
+size = Vector3(0.012, 0.05, 0.012)
 
 [node name="Console" type="Node3D"]
 script = ExtResource("1_tk5gh")
@@ -279,6 +301,29 @@ transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.01
 mesh = SubResource("BoxMesh_battery")
 surface_material_override/0 = SubResource("StandardMaterial3D_battery")
 script = ExtResource("6_battery")
+
+[node name="Screwdriver" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.5, -0.42)
+script = ExtResource("7_driver")
+
+[node name="Handle" type="MeshInstance3D" parent="Screwdriver"]
+mesh = SubResource("BoxMesh_driver_handle")
+surface_material_override/0 = SubResource("StandardMaterial3D_driver_handle")
+
+[node name="Shaft" type="MeshInstance3D" parent="Screwdriver"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 0, 0)
+mesh = SubResource("BoxMesh_driver_shaft")
+surface_material_override/0 = SubResource("StandardMaterial3D_driver_shaft")
+
+[node name="Tip" type="MeshInstance3D" parent="Screwdriver"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.23, 0, 0)
+mesh = SubResource("BoxMesh_driver_tip")
+surface_material_override/0 = SubResource("StandardMaterial3D_driver_shaft")
+
+[node name="Cross" type="MeshInstance3D" parent="Screwdriver"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.23, 0, 0)
+mesh = SubResource("BoxMesh_driver_cross")
+surface_material_override/0 = SubResource("StandardMaterial3D_driver_shaft")
 
 [node name="Back" type="Node3D" parent="."]
 

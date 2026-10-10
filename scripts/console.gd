@@ -6,25 +6,40 @@ const DpadButtonScript := preload("res://scripts/dpad_button.gd")
 
 var _dragging := false
 var _pressing_dpad := false
+var _pressing_button := false
 var _holding_wire := false
 var _holding_battery: MeshInstance3D
+var _holding_screwdriver := false
 var _last_mouse := Vector2.ZERO
+var _shorted: Dictionary = {}
+var _dpad_locked := false
+var _locked_axis := Vector2.ZERO
 
 @onready var _camera: Camera3D = $"../Camera3D"
 @onready var _player: CharacterBody2D = $ScreenViewport/PlatformGame/CharacterBody2D
 @onready var _wire: Node3D = $Back/Mainboard/Wire
 @onready var _energy_label: Label = $ScreenViewport/PlatformGame/Hud/EnergyLabel
 @onready var _batteries: Array[MeshInstance3D] = [$BatteryLeft, $BatteryRight]
+@onready var _screwdriver: Node3D = $Screwdriver
 
 var _bodies: Dictionary = {}
 var _hovered: MeshInstance3D
 var _overlay_white: StandardMaterial3D
 var _overlay_green: StandardMaterial3D
+var _overlay_red: StandardMaterial3D
+var _burned: StandardMaterial3D
+var _shake := 0.0
+var _rest_position := Vector3.ZERO
+
+const SHAKE_TIME := 0.34
 
 
 func _ready() -> void:
 	_overlay_white = _make_overlay(Color(1, 1, 1, 0.55))
 	_overlay_green = _make_overlay(Color(0.25, 1, 0.4, 0.55))
+	_overlay_red = _make_overlay(Color(1, 0.18, 0.12, 0.6))
+	_burned = _make_overlay(Color(0.12, 0.05, 0.02, 1.0))
+	_burned.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 	for button in $Dpad.get_children():
 		if button.get_script() == DpadButtonScript:
 			button.pressed.connect(_on_dpad_pressed)
@@ -39,32 +54,42 @@ func _ready() -> void:
 	for battery in _batteries:
 		battery.removed.connect(_refresh_energy)
 	_refresh_energy()
+	_rest_position = position
 
 
-func _process(_delta: float) -> void:
+func _process(frame_delta: float) -> void:
+	_update_shake(frame_delta)
 	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	var mouse := get_viewport().get_mouse_position()
 	_update_hover(mouse)
 	if not pressed:
 		_dragging = false
 		_pressing_dpad = false
+		_pressing_button = false
 		_holding_wire = false
+		_holding_screwdriver = false
 		if _holding_battery != null:
 			_holding_battery.release()
 			_holding_battery = null
+		_screwdriver.release()
 		_wire.release()
-		_player.move_axis = Vector2.ZERO
+		_player.move_axis = _locked_axis if _dpad_locked else Vector2.ZERO
 		return
-	if not _dragging and not _pressing_dpad and not _holding_wire and _holding_battery == null:
+	if not _dragging and not _pressing_dpad and not _pressing_button and not _holding_wire and _holding_battery == null and not _holding_screwdriver:
 		if get_viewport().gui_get_hovered_control() != null:
 			return
 		if _try_grab_battery(mouse):
+			return
+		if _try_grab_screwdriver(mouse):
 			return
 		if _wire.try_grab(mouse, _camera):
 			_holding_wire = true
 			return
 		if _dpad_axis(mouse) != Vector2.ZERO:
 			_pressing_dpad = true
+			return
+		if _press_front_button(mouse):
+			_pressing_button = true
 			return
 		if _mesh_under(mouse) != null:
 			return
@@ -74,20 +99,23 @@ func _process(_delta: float) -> void:
 	if _holding_battery != null:
 		_holding_battery.drag_to(_holding_battery.follow_point(mouse, _camera))
 		return
+	if _holding_screwdriver:
+		_screwdriver.drag_to(_screwdriver.follow_point(mouse, _camera))
+		return
 	if _holding_wire:
 		_wire.drag(mouse, _camera)
 		return
 	if _pressing_dpad:
 		_dpad_axis(mouse)
 		return
+	if _pressing_button:
+		return
 	var delta := mouse - _last_mouse
 	_last_mouse = mouse
 	if delta == Vector2.ZERO:
 		return
 	var yaw: float = -delta.x * sensitivity
-	var pitch: float = -delta.y * sensitivity
-	var rot := Quaternion(Vector3.UP, yaw) * Quaternion(Vector3.RIGHT, pitch)
-	quaternion = rot * quaternion
+	rotation = Vector3(0.0, rotation.y + yaw, 0.0)
 
 
 func _refresh_energy() -> void:
@@ -96,6 +124,85 @@ func _refresh_energy() -> void:
 		if battery.installed:
 			installed += 1
 	_energy_label.text = "%d%%" % (installed * 50)
+
+
+func _try_grab_screwdriver(mouse: Vector2) -> bool:
+	var hit := _ray_hit(mouse)
+	if hit.is_empty():
+		return false
+	if not _screwdriver.try_grab(hit.collider):
+		return false
+	_holding_screwdriver = true
+	return true
+
+
+func _press_front_button(mouse: Vector2) -> bool:
+	var mesh := _mesh_under(mouse)
+	if mesh == null:
+		return false
+	var pad_name: String = _bodies[_body_for(mesh)]["pad"]
+	if pad_name == "" or pad_name == "PadDpad":
+		return false
+	if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == pad_name:
+		_burn(pad_name)
+	return true
+
+
+func _burn(pad_name: String) -> void:
+	if _shorted.has(pad_name):
+		return
+	_shorted[pad_name] = true
+	_screwdriver.stick()
+	_wire.block_pad(pad_name)
+	var hole := get_node("Back/%s/Hole" % pad_name) as MeshInstance3D
+	hole.material_override = _burned
+	for body in _bodies:
+		var info: Dictionary = _bodies[body]
+		if info["pad"] == pad_name:
+			(info["mesh"] as MeshInstance3D).material_overlay = _overlay_red
+	_shake = SHAKE_TIME
+	_burst(pad_name)
+
+
+func _update_shake(delta: float) -> void:
+	if _shake <= 0.0:
+		position = _rest_position
+		return
+	_shake = maxf(_shake - delta, 0.0)
+	var strength := _shake / SHAKE_TIME
+	position = _rest_position + Vector3(
+		randf_range(-1.0, 1.0),
+		randf_range(-1.0, 1.0),
+		randf_range(-0.35, 0.35)
+	) * 0.05 * strength
+
+
+func _burst(pad_name: String) -> void:
+	var pad := get_node("Back/%s" % pad_name) as Node3D
+	var sparks := CPUParticles3D.new()
+	sparks.one_shot = true
+	sparks.explosiveness = 0.92
+	sparks.amount = 32
+	sparks.lifetime = 0.5
+	sparks.direction = Vector3(0, 0, -1)
+	sparks.spread = 34.0
+	sparks.gravity = Vector3(0, -1.2, 0)
+	sparks.initial_velocity_min = 1.1
+	sparks.initial_velocity_max = 2.4
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.028, 0.028, 0.028)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(1.0, 0.62, 0.16)
+	material.emission_enabled = true
+	material.emission = Color(1.0, 0.38, 0.05)
+	material.emission_energy_multiplier = 2.2
+	mesh.surface_set_material(0, material)
+	sparks.mesh = mesh
+	pad.add_child(sparks)
+	sparks.position = Vector3(0, 0, -0.06)
+	sparks.emitting = true
+	get_tree().create_timer(1.1).timeout.connect(sparks.queue_free)
 
 
 func _try_grab_battery(mouse: Vector2) -> bool:
@@ -131,6 +238,15 @@ func _dpad_axis(mouse: Vector2) -> Vector2:
 
 
 func _on_dpad_pressed(direction: Vector2) -> void:
+	if _dpad_locked:
+		_player.move_axis = _locked_axis
+		return
+	if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == "PadDpad":
+		_burn("PadDpad")
+		_dpad_locked = true
+		_locked_axis = direction
+		_player.move_axis = direction
+		return
 	if not _wire.is_live("PadDpad"):
 		return
 	_player.move_axis = direction
@@ -175,15 +291,25 @@ func _add_cylinder_hitbox(mesh: MeshInstance3D) -> void:
 
 func _update_hover(mouse: Vector2) -> void:
 	var mesh := _mesh_under(mouse)
-	if _hovered != null and _hovered != mesh:
+	if _hovered != null and _hovered != mesh and not _mesh_is_shorted(_hovered):
 		_hovered.material_overlay = null
 	_hovered = mesh
 	if mesh == null:
 		return
 	var info: Dictionary = _bodies[_body_for(mesh)]
 	var pad_name: String = info["pad"]
+	if _shorted.has(pad_name):
+		mesh.material_overlay = _overlay_red
+		return
 	var working: bool = bool(info["live"]) or (pad_name == "PadDpad" and _wire.is_live(pad_name))
 	mesh.material_overlay = _overlay_green if working else _overlay_white
+
+
+func _mesh_is_shorted(mesh: MeshInstance3D) -> bool:
+	var body := _body_for(mesh)
+	if body == null:
+		return false
+	return _shorted.has(_bodies[body]["pad"])
 
 
 func _body_for(mesh: MeshInstance3D) -> StaticBody3D:

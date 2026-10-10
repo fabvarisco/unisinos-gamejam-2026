@@ -19,6 +19,7 @@ var _spacing := 0.05
 var _plugged := false
 var _pinned := Vector3.ZERO
 var connected_pad: Node3D = null
+var blocked_pads: Dictionary = {}
 var _battery_nodes: Array[Node3D] = []
 
 
@@ -193,12 +194,19 @@ func is_live(pad_name: String) -> bool:
 	return connected_pad != null and connected_pad.name == pad_name
 
 
+func block_pad(pad_name: String) -> void:
+	blocked_pads[pad_name] = true
+	if connected_pad != null and connected_pad.name == pad_name:
+		connected_pad = null
+		_plugged = false
+
+
 func _nearest_pad() -> Node3D:
 	var back := get_parent().get_parent()
 	var best: Node3D = null
 	var best_distance := snap_distance
 	for child in back.get_children():
-		if not str(child.name).begins_with("Pad"):
+		if not str(child.name).begins_with("Pad") or blocked_pads.has(child.name):
 			continue
 		var distance := _tip.global_position.distance_to(child.global_position)
 		if distance < best_distance:
