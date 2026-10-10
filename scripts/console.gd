@@ -25,10 +25,13 @@ func _ready() -> void:
 	for button in $Dpad.get_children():
 		if button.get_script() == DpadButtonScript:
 			button.pressed.connect(_on_dpad_pressed)
-			_bodies[button] = {"mesh": button.get_node("Mesh"), "pad": "PadDpad"}
+			_bodies[button] = {"mesh": button.get_node("Mesh"), "pad": "PadDpad", "live": false}
 	_add_hitbox($ButtonA, "PadA")
 	_add_hitbox($ButtonB, "PadB")
 	_add_hitbox($Start, "PadStart")
+	_add_cylinder_hitbox($Side/ContrastWheel)
+	_add_hitbox($Side/VolumePlus, "", true)
+	_add_hitbox($Side/VolumeMinus, "", true)
 
 
 func _process(_delta: float) -> void:
@@ -50,6 +53,8 @@ func _process(_delta: float) -> void:
 			return
 		if _dpad_axis(mouse) != Vector2.ZERO:
 			_pressing_dpad = true
+			return
+		if _mesh_under(mouse) != null:
 			return
 		_dragging = true
 		_last_mouse = mouse
@@ -90,7 +95,7 @@ func _on_dpad_pressed(direction: Vector2) -> void:
 	_player.move_axis = direction
 
 
-func _add_hitbox(mesh: MeshInstance3D, pad_name: String) -> void:
+func _add_hitbox(mesh: MeshInstance3D, pad_name: String, live := false) -> void:
 	var body := StaticBody3D.new()
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
@@ -99,7 +104,21 @@ func _add_hitbox(mesh: MeshInstance3D, pad_name: String) -> void:
 	shape.shape = box
 	body.add_child(shape)
 	mesh.add_child(body)
-	_bodies[body] = {"mesh": mesh, "pad": pad_name}
+	_bodies[body] = {"mesh": mesh, "pad": pad_name, "live": live}
+
+
+func _add_cylinder_hitbox(mesh: MeshInstance3D) -> void:
+	var source := mesh.mesh as CylinderMesh
+	var body := StaticBody3D.new()
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = source.top_radius
+	cylinder.height = source.height
+	shape.shape = cylinder
+	body.add_child(shape)
+	mesh.add_child(body)
+	_bodies[body] = {"mesh": mesh, "pad": "", "live": true}
 
 
 func _update_hover(mouse: Vector2) -> void:
@@ -109,8 +128,9 @@ func _update_hover(mouse: Vector2) -> void:
 	_hovered = mesh
 	if mesh == null:
 		return
-	var pad_name: String = _bodies[_body_for(mesh)]["pad"]
-	var working: bool = pad_name == "PadDpad" and _wire.is_live(pad_name)
+	var info: Dictionary = _bodies[_body_for(mesh)]
+	var pad_name: String = info["pad"]
+	var working: bool = bool(info["live"]) or (pad_name == "PadDpad" and _wire.is_live(pad_name))
 	mesh.material_overlay = _overlay_green if working else _overlay_white
 
 
