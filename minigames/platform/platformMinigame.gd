@@ -184,8 +184,8 @@ func _place_goal(cell: Vector2i) -> void:
 	var goal := $Goal as Area2D
 	var shape_node := $Goal/CollisionShape2D as CollisionShape2D
 	shape_node.position = Vector2.ZERO
-	(shape_node.shape as RectangleShape2D).size = Vector2(48, 72)
-	goal.position = Vector2(cell.x * 64 + 32, cell.y * 64 - 20)
+	(shape_node.shape as RectangleShape2D).size = Vector2(76, 76)
+	goal.position = Vector2(cell.x * 64 + 32, cell.y * 64 + 32)
 
 
 func _add_coin(spot: Vector2) -> void:

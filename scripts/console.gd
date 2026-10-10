@@ -8,6 +8,7 @@ const VOLUME_DB_MIN := -40.0
 const VOLUME_DB_MAX := 0.0
 const VOLUME_DB_STEP := 4.0
 const VOLUME_PRESS := 0.014
+const PITCH_LIMIT := 0.22
 const SOUND_BUTTON := preload("res://Assets/sounds/button.wav")
 const SOUND_CONNECT := preload("res://Assets/sounds/connect circuit.wav")
 const SOUND_DISCONNECT := preload("res://Assets/sounds/disconnect circuit.wav")
@@ -205,7 +206,8 @@ func _process(frame_delta: float) -> void:
 	if spin_locked or _dialogue_open():
 		return
 	var yaw: float = -delta.x * sensitivity
-	rotation = Vector3(0.0, rotation.y + yaw, 0.0)
+	var pitch := clampf(rotation.x - delta.y * sensitivity, -PITCH_LIMIT, PITCH_LIMIT)
+	rotation = Vector3(pitch, rotation.y + yaw, 0.0)
 
 
 func _keyboard_yaw(frame_delta: float) -> void:
@@ -218,7 +220,7 @@ func _keyboard_yaw(frame_delta: float) -> void:
 		direction += 1.0
 	if direction == 0.0:
 		return
-	rotation = Vector3(0.0, rotation.y + direction * 1.8 * frame_delta, 0.0)
+	rotation = Vector3(rotation.x, rotation.y + direction * 1.8 * frame_delta, 0.0)
 
 
 func _dialogue_open() -> bool:
