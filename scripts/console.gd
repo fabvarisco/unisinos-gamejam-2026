@@ -7,11 +7,14 @@ const DpadButtonScript := preload("res://scripts/dpad_button.gd")
 var _dragging := false
 var _pressing_dpad := false
 var _holding_wire := false
+var _holding_battery: MeshInstance3D
 var _last_mouse := Vector2.ZERO
 
 @onready var _camera: Camera3D = $"../Camera3D"
 @onready var _player: CharacterBody2D = $ScreenViewport/PlatformGame/CharacterBody2D
 @onready var _wire: Node3D = $Back/Mainboard/Wire
+@onready var _energy_label: Label = $ScreenViewport/PlatformGame/Hud/EnergyLabel
+@onready var _batteries: Array[MeshInstance3D] = [$BatteryLeft, $BatteryRight]
 
 var _bodies: Dictionary = {}
 var _hovered: MeshInstance3D
@@ -32,6 +35,10 @@ func _ready() -> void:
 	_add_cylinder_hitbox($Side/ContrastWheel)
 	_add_hitbox($Side/VolumePlus, "", true)
 	_add_hitbox($Side/VolumeMinus, "", true)
+	_add_blocker($Body)
+	for battery in _batteries:
+		battery.removed.connect(_refresh_energy)
+	_refresh_energy()
 
 
 func _process(_delta: float) -> void:
@@ -42,11 +49,16 @@ func _process(_delta: float) -> void:
 		_dragging = false
 		_pressing_dpad = false
 		_holding_wire = false
+		if _holding_battery != null:
+			_holding_battery.release()
+			_holding_battery = null
 		_wire.release()
 		_player.move_axis = Vector2.ZERO
 		return
-	if not _dragging and not _pressing_dpad and not _holding_wire:
+	if not _dragging and not _pressing_dpad and not _holding_wire and _holding_battery == null:
 		if get_viewport().gui_get_hovered_control() != null:
+			return
+		if _try_grab_battery(mouse):
 			return
 		if _wire.try_grab(mouse, _camera):
 			_holding_wire = true
@@ -58,6 +70,9 @@ func _process(_delta: float) -> void:
 			return
 		_dragging = true
 		_last_mouse = mouse
+		return
+	if _holding_battery != null:
+		_holding_battery.drag_to(_holding_battery.follow_point(mouse, _camera))
 		return
 	if _holding_wire:
 		_wire.drag(mouse, _camera)
@@ -73,6 +88,32 @@ func _process(_delta: float) -> void:
 	var pitch: float = -delta.y * sensitivity
 	var rot := Quaternion(Vector3.UP, yaw) * Quaternion(Vector3.RIGHT, pitch)
 	quaternion = rot * quaternion
+
+
+func _refresh_energy() -> void:
+	var installed := 0
+	for battery in _batteries:
+		if battery.installed:
+			installed += 1
+	_energy_label.text = "%d%%" % (installed * 50)
+
+
+func _try_grab_battery(mouse: Vector2) -> bool:
+	var hit := _ray_hit(mouse)
+	if hit.is_empty():
+		return false
+	for battery in _batteries:
+		if battery.try_grab(hit.collider):
+			_holding_battery = battery
+			return true
+	return false
+
+
+func _ray_hit(mouse: Vector2) -> Dictionary:
+	var origin := _camera.project_ray_origin(mouse)
+	var end := origin + _camera.project_ray_normal(mouse) * 100.0
+	var query := PhysicsRayQueryParameters3D.create(origin, end)
+	return _camera.get_world_3d().direct_space_state.intersect_ray(query)
 
 
 func _dpad_axis(mouse: Vector2) -> Vector2:
@@ -93,6 +134,17 @@ func _on_dpad_pressed(direction: Vector2) -> void:
 	if not _wire.is_live("PadDpad"):
 		return
 	_player.move_axis = direction
+
+
+func _add_blocker(mesh: MeshInstance3D) -> void:
+	var body := StaticBody3D.new()
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = (mesh.mesh as BoxMesh).size
+	shape.shape = box
+	body.add_child(shape)
+	mesh.add_child(body)
 
 
 func _add_hitbox(mesh: MeshInstance3D, pad_name: String, live := false) -> void:
