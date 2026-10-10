@@ -55,7 +55,7 @@ position = Vector2(1100, 520)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goal"]
-position = Vector2(-3, -7)
+position = Vector2(1, 0)
 shape = SubResource("RectangleShape2D_goal")
 
 [node name="Hud" type="CanvasLayer" parent="."]

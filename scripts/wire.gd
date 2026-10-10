@@ -1,6 +1,6 @@
 extends Node3D
 
-@export var anchor := Vector3(0.14, 0.0, -0.02)
+@export var anchor := Vector3(0.14, 0.0, 0.15)
 @export var snap_distance := 0.16
 @export var point_count := 12
 @export var rope_length := 0.62
@@ -182,8 +182,12 @@ func _push_out_xy(point: Vector3, box: AABB, margin: float) -> Vector3:
 func _clamp_to_board(point: Vector3) -> Vector3:
 	point.x = clampf(point.x, -0.55, 0.55)
 	point.y = clampf(point.y, -1.05, 0.75)
-	point.z = anchor.z
+	point.z = 0.10 if _over_battery_panel(point) else anchor.z
 	return point
+
+
+func _over_battery_panel(point: Vector3) -> bool:
+	return point.x >= -0.46 and point.x <= 0.49 and point.y >= -1.31 and point.y <= -0.52
 
 
 func _sync_tip() -> void:
@@ -235,7 +239,7 @@ func _plane_hit(mouse: Vector2, camera: Camera3D) -> Vector3:
 func _raycast(mouse: Vector2, camera: Camera3D) -> Dictionary:
 	var origin := camera.project_ray_origin(mouse)
 	var end := origin + camera.project_ray_normal(mouse) * 100.0
-	var query := PhysicsRayQueryParameters3D.create(origin, end)
+	var query := PhysicsRayQueryParameters3D.create(origin, end, 2)
 	return camera.get_world_3d().direct_space_state.intersect_ray(query)
 
 

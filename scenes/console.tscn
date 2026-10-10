@@ -1,4 +1,4 @@
-[gd_scene load_steps=63 format=3 uid="uid://bdmmg8ublxp6e"]
+[gd_scene load_steps=62 format=3 uid="uid://bdmmg8ublxp6e"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
 [ext_resource type="PackedScene" uid="uid://cggntn37o7i3x" path="res://minigames/platform/platformMinigame.tscn" id="2_buc2e"]
@@ -34,6 +34,7 @@ as_normal_map = true
 bump_strength = 1.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.73, 0.76, 0.68, 1)
 albedo_texture = SubResource("NoiseTexture2D_plastic_albedo")
 roughness = 0.5
 normal_enabled = true
@@ -77,9 +78,6 @@ roughness = 0.3
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dpad"]
 size = Vector3(0.12, 0.12, 0.12)
-
-[sub_resource type="BoxMesh" id="BoxMesh_button"]
-size = Vector3(0.14, 0.14, 0.08)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_button"]
 top_radius = 0.085
@@ -125,6 +123,20 @@ size = Vector3(0.05, 0.1, 0.16)
 [sub_resource type="BoxMesh" id="BoxMesh_pip"]
 size = Vector3(0.02, 0.018, 0.035)
 
+[sub_resource type="BoxMesh" id="BoxMesh_slot"]
+size = Vector3(0.9, 0.74, 0.02)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot"]
+albedo_color = Color(0.14, 0.13, 0.12, 1)
+roughness = 0.92
+
+[sub_resource type="BoxMesh" id="BoxMesh_slot_rim"]
+size = Vector3(0.8, 0.32, 0.006)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot_rim"]
+albedo_color = Color(0.03, 0.03, 0.03, 1)
+roughness = 1.0
+
 [sub_resource type="BoxMesh" id="BoxMesh_battery"]
 size = Vector3(0.28, 0.72, 0.14)
 
@@ -132,20 +144,6 @@ size = Vector3(0.28, 0.72, 0.14)
 albedo_color = Color(0.82, 0.78, 0.48, 1)
 metallic = 0.35
 roughness = 0.5
-
-[sub_resource type="BoxMesh" id="BoxMesh_slot"]
-size = Vector3(0.66, 0.22, 0.03)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot"]
-albedo_color = Color(0.05, 0.06, 0.05, 1)
-roughness = 0.9
-
-[sub_resource type="BoxMesh" id="BoxMesh_slot_rim"]
-size = Vector3(0.76, 0.32, 0.015)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot_rim"]
-shading_mode = 0
-albedo_color = Color(0.55, 0.95, 0.4, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_driver_handle"]
 size = Vector3(0.12, 0.055, 0.055)
@@ -353,20 +351,20 @@ mesh = SubResource("CylinderMesh_button")
 surface_material_override/0 = SubResource("StandardMaterial3D_b")
 
 [node name="LabelA" type="Label3D" parent="."]
-transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.55, -0.42, 0.26)
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1, 0.55, -0.42, 0.26)
 pixel_size = 0.0016
+alpha_cut = 1
+modulate = Color(0.2, 0.13, 0.38, 1)
 text = "A"
 font_size = 56
-modulate = Color(0.2, 0.13, 0.38, 1)
-alpha_cut = 1
 
 [node name="LabelB" type="Label3D" parent="."]
-transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.33, -0.63, 0.26)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, -0.63, 0.26)
 pixel_size = 0.0016
+alpha_cut = 1
+modulate = Color(0.2, 0.13, 0.38, 1)
 text = "B"
 font_size = 56
-modulate = Color(0.2, 0.13, 0.38, 1)
-alpha_cut = 1
 
 [node name="Start" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, -0.78, 0.275)
@@ -437,34 +435,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.488, 0.02)
 mesh = SubResource("BoxMesh_pip")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
-[node name="SlotLeft" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.603, -0.3)
+[node name="BatteryPanel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.764, -0.177)
 mesh = SubResource("BoxMesh_slot")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot")
 
-[node name="Rim" type="MeshInstance3D" parent="SlotLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.01)
+[node name="LaneLeft" type="MeshInstance3D" parent="BatteryPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.161, -0.012)
 mesh = SubResource("BoxMesh_slot_rim")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot_rim")
 
-[node name="SlotRight" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.925, -0.3)
-mesh = SubResource("BoxMesh_slot")
-surface_material_override/0 = SubResource("StandardMaterial3D_slot")
-
-[node name="Rim" type="MeshInstance3D" parent="SlotRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.01)
+[node name="LaneRight" type="MeshInstance3D" parent="BatteryPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.161, -0.012)
 mesh = SubResource("BoxMesh_slot_rim")
 surface_material_override/0 = SubResource("StandardMaterial3D_slot_rim")
 
 [node name="BatteryLeft" type="MeshInstance3D" parent="."]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.013, -0.603, -0.17790405)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.013, -0.603, -0.248)
 mesh = SubResource("BoxMesh_battery")
 surface_material_override/0 = SubResource("StandardMaterial3D_battery")
 script = ExtResource("6_battery")
 
 [node name="BatteryRight" type="MeshInstance3D" parent="."]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.0125949085, -0.92548096, -0.17088923)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.013, -0.925, -0.248)
 mesh = SubResource("BoxMesh_battery")
 surface_material_override/0 = SubResource("StandardMaterial3D_battery")
 script = ExtResource("6_battery")
@@ -522,6 +515,7 @@ mesh = SubResource("BoxMesh_hole")
 surface_material_override/0 = SubResource("StandardMaterial3D_pad")
 
 [node name="Grab" type="StaticBody3D" parent="Back/Mainboard/Wire/Tip"]
+collision_layer = 2
 collision_mask = 0
 
 [node name="Collision" type="CollisionShape3D" parent="Back/Mainboard/Wire/Tip/Grab"]

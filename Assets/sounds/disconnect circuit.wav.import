@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bxt7h22ifhcgo"
+path="res://.godot/imported/disconnect circuit.wav-f86e92105efec1b249dfa1367faf6231.sample"
+
+[deps]
+
+source_file="res://Assets/sounds/disconnect circuit.wav"
+dest_files=["res://.godot/imported/disconnect circuit.wav-f86e92105efec1b249dfa1367faf6231.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

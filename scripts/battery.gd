@@ -24,13 +24,10 @@ func _ready() -> void:
 
 
 func try_grab(collider: Object) -> bool:
-	if not visible or collider != _grab:
+	if installed or not visible or collider != _grab:
 		return false
 	held = true
-	_was_installed = installed
-	if installed:
-		installed = false
-		removed.emit()
+	_was_installed = false
 	return true
 
 
@@ -42,7 +39,7 @@ func place_out(local_origin: Vector3) -> void:
 
 func set_shown(on: bool) -> void:
 	visible = on
-	_grab.collision_layer = 1 if on else 0
+	_grab.collision_layer = 1 if on and not installed else 0
 
 
 func drag_to(world_point: Vector3) -> void:
