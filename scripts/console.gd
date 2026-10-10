@@ -619,24 +619,31 @@ func _snapshot_screen() -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
-func _add_blocker(host: Node3D, box_size: Vector3) -> void:
+func _add_blocker(node: Node3D, size: Vector3) -> void:
 	var body := StaticBody3D.new()
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = box_size
+	box.size = size
 	shape.shape = box
 	body.add_child(shape)
-	host.add_child(body)
+	node.add_child(body)
 
 
 func _add_hitbox(mesh: MeshInstance3D, pad_name: String, live := false) -> void:
 	var body := StaticBody3D.new()
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = (mesh.mesh as BoxMesh).size
-	shape.shape = box
+	var source := mesh.mesh
+	if source is CylinderMesh:
+		var cylinder := CylinderShape3D.new()
+		cylinder.radius = (source as CylinderMesh).top_radius
+		cylinder.height = (source as CylinderMesh).height
+		shape.shape = cylinder
+	else:
+		var box := BoxShape3D.new()
+		box.size = (source as BoxMesh).size
+		shape.shape = box
 	body.add_child(shape)
 	mesh.add_child(body)
 	_bodies[body] = {"mesh": mesh, "pad": pad_name, "live": live}
