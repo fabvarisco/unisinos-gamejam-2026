@@ -18,6 +18,7 @@ var _segments: Array[MeshInstance3D] = []
 var _spacing := 0.05
 var _plugged := false
 var _pinned := Vector3.ZERO
+var connected_pad: Node3D = null
 
 
 func _ready() -> void:
@@ -54,6 +55,7 @@ func try_grab(mouse: Vector2, camera: Camera3D) -> bool:
 		return false
 	held = true
 	_plugged = false
+	connected_pad = null
 	drag(mouse, camera)
 	return true
 
@@ -73,7 +75,9 @@ func release() -> void:
 	held = false
 	var pad := _nearest_pad()
 	if pad == null:
+		connected_pad = null
 		return
+	connected_pad = pad
 	_plugged = true
 	var local := to_local(pad.global_position)
 	_pinned = _clamp_to_board(local)
@@ -125,6 +129,10 @@ func _clamp_to_board(point: Vector3) -> Vector3:
 
 func _sync_tip() -> void:
 	_tip.position = _points[point_count - 1]
+
+
+func is_live(pad_name: String) -> bool:
+	return connected_pad != null and connected_pad.name == pad_name
 
 
 func _nearest_pad() -> Node3D:
