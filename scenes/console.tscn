@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://bdmmg8ublxp6e"]
+[gd_scene load_steps=33 format=3 uid="uid://bdmmg8ublxp6e"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
 [ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://scenes/platform_game.tscn" id="2_buc2e"]
@@ -63,13 +63,48 @@ albedo_color = Color(0.82, 0.78, 0.48, 1)
 metallic = 0.35
 roughness = 0.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_connector"]
-size = Vector3(0.14, 0.16, 0.12)
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+size = Vector3(1.2, 1.9, 0.04)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_connector"]
-albedo_color = Color(0.78, 0.64, 0.28, 1)
-metallic = 0.6
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_board"]
+albedo_color = Color(0.05, 0.32, 0.14, 1)
+roughness = 0.78
+
+[sub_resource type="BoxMesh" id="BoxMesh_chip"]
+size = Vector3(0.28, 0.22, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chip"]
+albedo_color = Color(0.08, 0.1, 0.09, 1)
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_wire"]
+size = Vector3(1, 0.022, 0.022)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wire"]
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_hole"]
+size = Vector3(0.06, 0.06, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pad"]
+albedo_color = Color(0.85, 0.72, 0.28, 1)
+metallic = 0.75
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_trace_h"]
+size = Vector3(1, 0.028, 0.018)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_copper"]
+albedo_color = Color(0.72, 0.45, 0.22, 1)
+metallic = 0.7
 roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_trace_v"]
+size = Vector3(0.028, 1, 0.018)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pad"]
+size = Vector3(0.16, 0.16, 0.03)
 
 [node name="Console" type="Node3D"]
 script = ExtResource("1_tk5gh")
@@ -181,22 +216,121 @@ transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.01
 mesh = SubResource("BoxMesh_battery")
 surface_material_override/0 = SubResource("StandardMaterial3D_battery")
 
-[node name="ConnectorDpad" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.72, -0.31)
-mesh = SubResource("BoxMesh_connector")
-surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+[node name="Back" type="Node3D" parent="."]
 
-[node name="ConnectorA" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.72, -0.31)
-mesh = SubResource("BoxMesh_connector")
-surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+[node name="Board" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.28)
+mesh = SubResource("BoxMesh_board")
+surface_material_override/0 = SubResource("StandardMaterial3D_board")
 
-[node name="ConnectorB" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.72, -0.31)
-mesh = SubResource("BoxMesh_connector")
-surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+[node name="Mainboard" type="Node3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -0.32)
 
-[node name="ConnectorStart" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.72, -0.31)
-mesh = SubResource("BoxMesh_connector")
-surface_material_override/0 = SubResource("StandardMaterial3D_connector")
+[node name="Chip" type="MeshInstance3D" parent="Back/Mainboard"]
+mesh = SubResource("BoxMesh_chip")
+surface_material_override/0 = SubResource("StandardMaterial3D_chip")
+
+[node name="Wire" type="Node3D" parent="Back/Mainboard"]
+
+[node name="Stem" type="MeshInstance3D" parent="Back/Mainboard/Wire"]
+transform = Transform3D(0.18, 0, 0, 0, 1, 0, 0, 0, 1, 0.23, 0, -0.03)
+mesh = SubResource("BoxMesh_wire")
+surface_material_override/0 = SubResource("StandardMaterial3D_wire")
+
+[node name="Drop" type="MeshInstance3D" parent="Back/Mainboard/Wire"]
+transform = Transform3D(0, 1, 0, 0.16, 0, 0, 0, 0, 1, 0.32, -0.08, -0.03)
+mesh = SubResource("BoxMesh_wire")
+surface_material_override/0 = SubResource("StandardMaterial3D_wire")
+
+[node name="Tip" type="MeshInstance3D" parent="Back/Mainboard/Wire"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, -0.18, -0.04)
+mesh = SubResource("BoxMesh_hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+
+[node name="TraceDpadH" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(0.28, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.15, -0.312)
+mesh = SubResource("BoxMesh_trace_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceDpadV" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 0.47, 0, 0, 0, 1, -0.42, 0.385, -0.312)
+mesh = SubResource("BoxMesh_trace_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceAH" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(0.28, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.26, -0.312)
+mesh = SubResource("BoxMesh_trace_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceAV" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 0.36, 0, 0, 0, 1, 0.42, 0.44, -0.312)
+mesh = SubResource("BoxMesh_trace_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceBH" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(0.28, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.04, -0.312)
+mesh = SubResource("BoxMesh_trace_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceBV" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -0.42, 0.06, -0.312)
+mesh = SubResource("BoxMesh_trace_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceStartV" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 0.19, 0, 0, 0, 1, 0.14, -0.055, -0.312)
+mesh = SubResource("BoxMesh_trace_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="TraceStartH" type="MeshInstance3D" parent="Back"]
+transform = Transform3D(0.2, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, -0.15, -0.312)
+mesh = SubResource("BoxMesh_trace_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_copper")
+
+[node name="PadDpad" type="Node3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.7, -0.32)
+
+[node name="Pad" type="MeshInstance3D" parent="Back/PadDpad"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+
+[node name="Hole" type="MeshInstance3D" parent="Back/PadDpad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.025)
+mesh = SubResource("BoxMesh_hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="PadA" type="Node3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.7, -0.32)
+
+[node name="Pad" type="MeshInstance3D" parent="Back/PadA"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+
+[node name="Hole" type="MeshInstance3D" parent="Back/PadA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.025)
+mesh = SubResource("BoxMesh_hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_a")
+
+[node name="PadB" type="Node3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0, -0.32)
+
+[node name="Pad" type="MeshInstance3D" parent="Back/PadB"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+
+[node name="Hole" type="MeshInstance3D" parent="Back/PadB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.025)
+mesh = SubResource("BoxMesh_hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_b")
+
+[node name="PadStart" type="Node3D" parent="Back"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, -0.15, -0.32)
+
+[node name="Pad" type="MeshInstance3D" parent="Back/PadStart"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = SubResource("StandardMaterial3D_pad")
+
+[node name="Hole" type="MeshInstance3D" parent="Back/PadStart"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.025)
+mesh = SubResource("BoxMesh_hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_start")
