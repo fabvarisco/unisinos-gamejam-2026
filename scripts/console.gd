@@ -63,6 +63,7 @@ var _volume_pip_on: StandardMaterial3D
 var _volume_rest: Dictionary = {}
 var _volume_tweens: Dictionary = {}
 var _powered := false
+var _sparks: Dictionary = {}
 var _hold_layer: CanvasLayer
 var _capture: SubViewport
 
@@ -366,7 +367,7 @@ func _burn(pad_name: String) -> void:
 		if info["pad"] == pad_name:
 			(info["mesh"] as MeshInstance3D).material_overlay = _overlay_red
 	_shake = SHAKE_TIME
-	_burst(pad_name)
+	_start_sparks(pad_name)
 
 
 func _clear_short(pad_name: String) -> void:
@@ -384,6 +385,7 @@ func _clear_short(pad_name: String) -> void:
 		_dpad_locked = false
 		_locked_axis = Vector2.ZERO
 		_player.move_axis = Vector2.ZERO
+	_stop_sparks(pad_name)
 
 
 func _update_shake(delta: float) -> void:
@@ -399,18 +401,20 @@ func _update_shake(delta: float) -> void:
 	) * 0.05 * strength
 
 
-func _burst(pad_name: String) -> void:
+func _start_sparks(pad_name: String) -> void:
+	if _sparks.has(pad_name):
+		return
 	var pad := get_node("Back/%s" % pad_name) as Node3D
 	var sparks := CPUParticles3D.new()
-	sparks.one_shot = true
-	sparks.explosiveness = 0.92
-	sparks.amount = 32
-	sparks.lifetime = 0.5
+	sparks.one_shot = false
+	sparks.explosiveness = 0.15
+	sparks.amount = 14
+	sparks.lifetime = 0.38
 	sparks.direction = Vector3(0, 0, -1)
-	sparks.spread = 34.0
+	sparks.spread = 38.0
 	sparks.gravity = Vector3(0, -1.2, 0)
-	sparks.initial_velocity_min = 1.1
-	sparks.initial_velocity_max = 2.4
+	sparks.initial_velocity_min = 0.7
+	sparks.initial_velocity_max = 1.8
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(0.028, 0.028, 0.028)
 	var material := StandardMaterial3D.new()
@@ -424,7 +428,16 @@ func _burst(pad_name: String) -> void:
 	pad.add_child(sparks)
 	sparks.position = Vector3(0, 0, -0.06)
 	sparks.emitting = true
-	get_tree().create_timer(1.1).timeout.connect(sparks.queue_free)
+	_sparks[pad_name] = sparks
+
+
+func _stop_sparks(pad_name: String) -> void:
+	if not _sparks.has(pad_name):
+		return
+	var sparks := _sparks[pad_name] as CPUParticles3D
+	_sparks.erase(pad_name)
+	sparks.emitting = false
+	get_tree().create_timer(sparks.lifetime).timeout.connect(sparks.queue_free)
 
 
 func _try_grab_battery(mouse: Vector2) -> bool:
