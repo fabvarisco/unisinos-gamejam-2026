@@ -1,7 +1,7 @@
 [gd_scene load_steps=48 format=3 uid="uid://bdmmg8ublxp6e"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
-[ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://scenes/platform_game.tscn" id="2_buc2e"]
+[ext_resource type="PackedScene" uid="uid://qpek4jpi10x4" path="res://minigames/platform/platformMinigame.tscn" id="2_buc2e"]
 [ext_resource type="Script" uid="uid://dafclsqhsee5d" path="res://scripts/screen.gd" id="3_uqctj"]
 [ext_resource type="Script" uid="uid://cwn2e2nitn78m" path="res://scripts/dpad_button.gd" id="4_y5tf0"]
 [ext_resource type="Script" uid="uid://bed4jfvpmeu0h" path="res://scripts/wire.gd" id="5_wire"]
@@ -175,7 +175,7 @@ offset_right = 1280.0
 offset_bottom = 720.0
 color = Color(0.04, 0.11, 0.07, 1)
 
-[node name="PlatformGame" parent="ScreenViewport" instance=ExtResource("2_buc2e")]
+[node name="PlatformMinigame" parent="ScreenViewport" instance=ExtResource("2_buc2e")]
 
 [node name="Screen" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.35)

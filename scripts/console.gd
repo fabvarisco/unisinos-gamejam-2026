@@ -14,11 +14,12 @@ var _last_mouse := Vector2.ZERO
 var _shorted: Dictionary = {}
 var _dpad_locked := false
 var _locked_axis := Vector2.ZERO
+var _holding_a := false
 
 @onready var _camera: Camera3D = $"../Camera3D"
-@onready var _player: CharacterBody2D = $ScreenViewport/PlatformGame/CharacterBody2D
+@onready var _player: CharacterBody2D = $ScreenViewport/PlatformMinigame/PlayerPlatform
 @onready var _wire: Node3D = $Back/Mainboard/Wire
-@onready var _energy_label: Label = $ScreenViewport/PlatformGame/Hud/EnergyLabel
+@onready var _energy_label: Label = $ScreenViewport/PlatformMinigame/Hud/EnergyLabel
 @onready var _batteries: Array[MeshInstance3D] = [$BatteryLeft, $BatteryRight]
 @onready var _screwdriver: Node3D = $Screwdriver
 
@@ -62,6 +63,9 @@ func _process(frame_delta: float) -> void:
 	var pressed := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	var mouse := get_viewport().get_mouse_position()
 	_update_hover(mouse)
+	if not pressed:
+		_holding_a = false
+	_update_jump()
 	if not pressed:
 		_dragging = false
 		_pressing_dpad = false
@@ -136,6 +140,13 @@ func _try_grab_screwdriver(mouse: Vector2) -> bool:
 	return true
 
 
+func _update_jump() -> void:
+	var stuck: bool = _shorted.has("PadA")
+	var wired: bool = _holding_a and _wire.is_live("PadA")
+	if stuck or wired:
+		_player.try_jump()
+
+
 func _press_front_button(mouse: Vector2) -> bool:
 	var mesh := _mesh_under(mouse)
 	if mesh == null:
@@ -143,6 +154,8 @@ func _press_front_button(mouse: Vector2) -> bool:
 	var pad_name: String = _bodies[_body_for(mesh)]["pad"]
 	if pad_name == "" or pad_name == "PadDpad":
 		return false
+	if pad_name == "PadA":
+		_holding_a = true
 	if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == pad_name:
 		_burn(pad_name)
 	return true
