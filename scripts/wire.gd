@@ -19,6 +19,7 @@ var _spacing := 0.05
 var _plugged := false
 var _pinned := Vector3.ZERO
 var connected_pad: Node3D = null
+var _battery_nodes: Array[Node3D] = []
 
 
 func _ready() -> void:
@@ -33,6 +34,9 @@ func _ready() -> void:
 		point.z = anchor.z
 		_points[i] = point
 		_previous[i] = point
+	var console := get_parent().get_parent().get_parent()
+	for battery_name in ["BatteryLeft", "BatteryRight"]:
+		_battery_nodes.append(console.get_node(battery_name))
 	_segment.visible = false
 	for _i in point_count - 1:
 		var piece := _segment.duplicate() as MeshInstance3D
@@ -90,6 +94,7 @@ func _simulate(delta: float) -> void:
 	var step := Vector3(0.0, -gravity, 0.0) * delta * delta
 	var last := point_count - 1
 	var pin_end := held or _plugged
+	var boxes := _battery_boxes()
 	for i in range(1, point_count):
 		if i == last and pin_end:
 			_points[i] = _pinned
@@ -98,7 +103,7 @@ func _simulate(delta: float) -> void:
 		var current := _points[i]
 		var velocity := (current - _previous[i]) * 0.985
 		_previous[i] = current
-		_points[i] = _clamp_to_board(current + velocity + step)
+		_points[i] = _outside_batteries(_clamp_to_board(current + velocity + step), boxes, i)
 	for _iteration in 8:
 		_points[0] = anchor
 		for i in point_count - 1:
@@ -117,7 +122,60 @@ func _simulate(delta: float) -> void:
 		if pin_end:
 			_points[last] = _pinned
 		for i in range(1, point_count):
-			_points[i] = _clamp_to_board(_points[i])
+			_points[i] = _outside_batteries(_clamp_to_board(_points[i]), boxes, i)
+
+
+func _battery_boxes() -> Array[AABB]:
+	var boxes: Array[AABB] = []
+	var to_wire := global_transform.affine_inverse()
+	for battery in _battery_nodes:
+		if not battery.visible or battery.get("installed") == false:
+			continue
+		var half := ((battery as MeshInstance3D).mesh as BoxMesh).size * 0.5
+		var to_local_wire := to_wire * battery.global_transform
+		var box := AABB()
+		var started := false
+		for x in [-half.x, half.x]:
+			for y in [-half.y, half.y]:
+				for z in [-half.z, half.z]:
+					var corner := to_local_wire * Vector3(x, y, z)
+					if not started:
+						box = AABB(corner, Vector3.ZERO)
+						started = true
+					else:
+						box = box.expand(corner)
+		boxes.append(box)
+	return boxes
+
+
+func _outside_batteries(point: Vector3, boxes: Array[AABB], index: int) -> Vector3:
+	var margin := 0.034 if index == point_count - 1 else 0.014
+	for _pass in 2:
+		for box in boxes:
+			point = _push_out_xy(point, box, margin)
+	return _clamp_to_board(point)
+
+
+func _push_out_xy(point: Vector3, box: AABB, margin: float) -> Vector3:
+	var min_x := box.position.x - margin
+	var max_x := box.position.x + box.size.x + margin
+	var min_y := box.position.y - margin
+	var max_y := box.position.y + box.size.y + margin
+	if point.x <= min_x or point.x >= max_x or point.y <= min_y or point.y >= max_y:
+		return point
+	var up := max_y - point.y
+	var down := point.y - min_y
+	var left := point.x - min_x
+	var right := max_x - point.x
+	if up <= down and up <= left and up <= right:
+		point.y = max_y
+	elif down <= left and down <= right:
+		point.y = min_y
+	elif left <= right:
+		point.x = min_x
+	else:
+		point.x = max_x
+	return point
 
 
 func _clamp_to_board(point: Vector3) -> Vector3:
