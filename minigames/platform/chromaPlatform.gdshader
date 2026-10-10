@@ -5,5 +5,5 @@ void fragment() {
 	if (color.r + color.g + color.b < 0.15) {
 		discard;
 	}
-	COLOR = color;
+	COLOR = vec4(1.0, 1.0, 1.0, 1.0);
 }
