@@ -1,12 +1,13 @@
-[gd_scene load_steps=48 format=3 uid="uid://bdmmg8ublxp6e"]
+[gd_scene load_steps=49 format=3 uid="uid://bdmmg8ublxp6e"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_tk5gh"]
-[ext_resource type="PackedScene" uid="uid://qpek4jpi10x4" path="res://minigames/platform/platformMinigame.tscn" id="2_buc2e"]
+[ext_resource type="PackedScene" uid="uid://cggntn37o7i3x" path="res://minigames/platform/platformMinigame.tscn" id="2_buc2e"]
 [ext_resource type="Script" uid="uid://dafclsqhsee5d" path="res://scripts/screen.gd" id="3_uqctj"]
 [ext_resource type="Script" uid="uid://cwn2e2nitn78m" path="res://scripts/dpad_button.gd" id="4_y5tf0"]
 [ext_resource type="Script" uid="uid://bed4jfvpmeu0h" path="res://scripts/wire.gd" id="5_wire"]
 [ext_resource type="Script" uid="uid://353hdy8xnyly" path="res://scripts/battery.gd" id="6_battery"]
-[ext_resource type="Script" path="res://scripts/screwdriver.gd" id="7_driver"]
+[ext_resource type="Script" uid="uid://j4clwpnhtamq" path="res://scripts/screwdriver.gd" id="7_driver"]
+[ext_resource type="PackedScene" path="res://minigames/gameSelect/gameSelect.tscn" id="8_select"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_body"]
 size = Vector3(1.5, 2.3, 0.5)
@@ -86,6 +87,27 @@ albedo_color = Color(0.82, 0.78, 0.48, 1)
 metallic = 0.35
 roughness = 0.5
 
+[sub_resource type="BoxMesh" id="BoxMesh_driver_handle"]
+size = Vector3(0.12, 0.055, 0.055)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_handle"]
+albedo_color = Color(0.45, 0.28, 0.14, 1)
+roughness = 0.72
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_shaft"]
+size = Vector3(0.16, 0.018, 0.018)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_shaft"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+metallic = 0.85
+roughness = 0.28
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_tip"]
+size = Vector3(0.05, 0.012, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_driver_cross"]
+size = Vector3(0.012, 0.05, 0.012)
+
 [sub_resource type="BoxMesh" id="BoxMesh_board"]
 size = Vector3(1.2, 1.9, 0.04)
 
@@ -132,27 +154,6 @@ size = Vector3(0.028, 1, 0.018)
 [sub_resource type="BoxMesh" id="BoxMesh_pad"]
 size = Vector3(0.16, 0.16, 0.03)
 
-[sub_resource type="BoxMesh" id="BoxMesh_driver_handle"]
-size = Vector3(0.12, 0.055, 0.055)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_handle"]
-albedo_color = Color(0.45, 0.28, 0.14, 1)
-roughness = 0.72
-
-[sub_resource type="BoxMesh" id="BoxMesh_driver_shaft"]
-size = Vector3(0.16, 0.018, 0.018)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_driver_shaft"]
-albedo_color = Color(0.72, 0.74, 0.76, 1)
-metallic = 0.85
-roughness = 0.28
-
-[sub_resource type="BoxMesh" id="BoxMesh_driver_tip"]
-size = Vector3(0.05, 0.012, 0.012)
-
-[sub_resource type="BoxMesh" id="BoxMesh_driver_cross"]
-size = Vector3(0.012, 0.05, 0.012)
-
 [node name="Console" type="Node3D"]
 script = ExtResource("1_tk5gh")
 
@@ -175,7 +176,27 @@ offset_right = 1280.0
 offset_bottom = 720.0
 color = Color(0.04, 0.11, 0.07, 1)
 
+[node name="GameSelect" parent="ScreenViewport" instance=ExtResource("8_select")]
+
 [node name="PlatformMinigame" parent="ScreenViewport" instance=ExtResource("2_buc2e")]
+process_mode = 4
+visible = false
+
+[node name="ScreenHud" type="CanvasLayer" parent="ScreenViewport"]
+layer = 10
+
+[node name="EnergyLabel" type="Label" parent="ScreenViewport/ScreenHud"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 96.0
+theme_override_colors/font_color = Color(0.75, 0.95, 0.55, 1)
+theme_override_font_sizes/font_size = 64
+text = "0%"
+horizontal_alignment = 2
 
 [node name="Screen" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.35)

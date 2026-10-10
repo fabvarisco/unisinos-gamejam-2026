@@ -1,6 +1,7 @@
 extends Node3D
 
 const DpadButtonScript := preload("res://scripts/dpad_button.gd")
+const PixelTransitionShader := preload("res://shaders/pixel_transition.gdshader")
 
 @export var sensitivity: float = 0.01
 
@@ -16,11 +17,15 @@ var _dpad_locked := false
 var _locked_axis := Vector2.ZERO
 var _holding_a := false
 var intro_playing := true
+var _menu_moved := false
+var _opening := false
 
 @onready var _camera: Camera3D = $"../Camera3D"
 @onready var _player: CharacterBody2D = $ScreenViewport/PlatformMinigame/PlayerPlatform
+@onready var _platform: Node2D = $ScreenViewport/PlatformMinigame
+@onready var _game_select: Node2D = $ScreenViewport/GameSelect
 @onready var _wire: Node3D = $Back/Mainboard/Wire
-@onready var _energy_label: Label = $ScreenViewport/PlatformMinigame/Hud/EnergyLabel
+@onready var _energy_label: Label = $ScreenViewport/ScreenHud/EnergyLabel
 @onready var _batteries: Array[MeshInstance3D] = [$BatteryLeft, $BatteryRight]
 @onready var _screwdriver: Node3D = $Screwdriver
 
@@ -53,6 +58,9 @@ func _ready() -> void:
 	_add_hitbox($Side/VolumePlus, "", true)
 	_add_hitbox($Side/VolumeMinus, "", true)
 	_add_blocker($Body)
+	_platform.visible = false
+	_platform.process_mode = Node.PROCESS_MODE_DISABLED
+	_game_select.opened.connect(_on_game_opened)
 	for battery in _batteries:
 		battery.removed.connect(_refresh_energy)
 		battery.inserted.connect(_refresh_energy)
@@ -96,7 +104,11 @@ func _process(frame_delta: float) -> void:
 			_holding_battery = null
 		_screwdriver.release()
 		_wire.release()
-		_player.move_axis = _locked_axis if _dpad_locked else Vector2.ZERO
+		_menu_moved = false
+		if _opening or _menu_is_open():
+			_player.move_axis = Vector2.ZERO
+		else:
+			_player.move_axis = _locked_axis if _dpad_locked else Vector2.ZERO
 		return
 	if not _dragging and not _pressing_dpad and not _pressing_button and not _holding_wire and _holding_battery == null and not _holding_screwdriver:
 		if get_viewport().gui_get_hovered_control() != null:
@@ -177,6 +189,8 @@ func _try_grab_screwdriver(mouse: Vector2) -> bool:
 
 
 func _update_jump() -> void:
+	if _opening or _menu_is_open():
+		return
 	var stuck: bool = _shorted.has("PadA")
 	var wired: bool = _holding_a and _wire.is_live("PadA")
 	if stuck or wired:
@@ -190,8 +204,18 @@ func _press_front_button(mouse: Vector2) -> bool:
 	var pad_name: String = _bodies[_body_for(mesh)]["pad"]
 	if pad_name == "" or pad_name == "PadDpad":
 		return false
+	if pad_name == "PadA" and _menu_is_open():
+		if _wire.is_live("PadA") or _shorted.has("PadA"):
+			_game_select.confirm()
+		return true
 	if pad_name == "PadA":
 		_holding_a = true
+	if pad_name == "PadStart":
+		if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == "PadStart":
+			_burn("PadStart")
+		if not _menu_is_open() and not _opening and (_wire.is_live("PadStart") or _shorted.has("PadStart")):
+			_return_to_menu()
+		return true
 	if _screwdriver.seated_pad != null and _screwdriver.seated_pad.name == pad_name:
 		_burn(pad_name)
 	return true
@@ -303,6 +327,16 @@ func _dpad_axis(mouse: Vector2) -> Vector2:
 
 
 func _on_dpad_pressed(direction: Vector2) -> void:
+	if _opening:
+		return
+	if _menu_is_open():
+		if not _menu_moved and (_wire.is_live("PadDpad") or _shorted.has("PadDpad")):
+			if direction.y < 0.0:
+				_game_select.move(-1)
+			elif direction.y > 0.0:
+				_game_select.move(1)
+			_menu_moved = true
+		return
 	if _dpad_locked:
 		_player.move_axis = _locked_axis
 		return
@@ -315,6 +349,70 @@ func _on_dpad_pressed(direction: Vector2) -> void:
 	if not _wire.is_live("PadDpad"):
 		return
 	_player.move_axis = direction
+
+
+func _on_game_opened(game_id: String) -> void:
+	if _opening or game_id != "platform":
+		return
+	_opening = true
+	_play_open_transition()
+
+
+func _menu_is_open() -> bool:
+	return is_instance_valid(_game_select) and _game_select.visible
+
+
+func _play_open_transition() -> void:
+	await _game_select.hide_text()
+	await RenderingServer.frame_post_draw
+	var from_tex := _snapshot_screen()
+	_game_select.set_shown(false)
+	_platform.visible = true
+	await RenderingServer.frame_post_draw
+	var to_tex := _snapshot_screen()
+	await _play_pixel_transition(from_tex, to_tex)
+	_opening = false
+	_platform.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+func _return_to_menu() -> void:
+	_opening = true
+	_holding_a = false
+	_player.move_axis = Vector2.ZERO
+	var from_tex := _snapshot_screen()
+	_platform.process_mode = Node.PROCESS_MODE_DISABLED
+	_platform.visible = false
+	_game_select.set_shown(true)
+	await RenderingServer.frame_post_draw
+	var to_tex := _snapshot_screen()
+	await _play_pixel_transition(from_tex, to_tex)
+	await _game_select.show_text()
+	_opening = false
+
+
+func _play_pixel_transition(from_tex: ImageTexture, to_tex: ImageTexture) -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	var cover := ColorRect.new()
+	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var material := ShaderMaterial.new()
+	material.shader = PixelTransitionShader
+	material.set_shader_parameter("from_tex", from_tex)
+	material.set_shader_parameter("to_tex", to_tex)
+	material.set_shader_parameter("progress", 0.0)
+	cover.material = material
+	$ScreenViewport.add_child(layer)
+	layer.add_child(cover)
+	cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var tween := create_tween()
+	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.0, 1.0, 2.4)
+	await tween.finished
+	layer.queue_free()
+
+
+func _snapshot_screen() -> ImageTexture:
+	var image := ($ScreenViewport as SubViewport).get_texture().get_image()
+	return ImageTexture.create_from_image(image)
 
 
 func _add_blocker(mesh: MeshInstance3D) -> void:
