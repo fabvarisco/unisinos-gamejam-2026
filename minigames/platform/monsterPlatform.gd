@@ -70,5 +70,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if body.has_method("respawn"):
-		body.respawn()
+	if not body.has_method("respawn") or not bool(body.call("respawn")):
+		return
+	var game := get_parent()
+	if game.has_method("play_enemy"):
+		game.play_enemy()

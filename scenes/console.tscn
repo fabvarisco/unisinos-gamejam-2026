@@ -9,9 +9,6 @@
 [ext_resource type="Script" uid="uid://j4clwpnhtamq" path="res://scripts/screwdriver.gd" id="7_driver"]
 [ext_resource type="PackedScene" path="res://minigames/gameSelect/gameSelect.tscn" id="8_select"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_body"]
-size = Vector3(1.5, 2.3, 0.5)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
 albedo_color = Color(0.73, 0.76, 0.68, 1)
 roughness = 0.82
@@ -78,6 +75,9 @@ roughness = 0.4
 
 [sub_resource type="BoxMesh" id="BoxMesh_volume"]
 size = Vector3(0.05, 0.1, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pip"]
+size = Vector3(0.02, 0.018, 0.035)
 
 [sub_resource type="BoxMesh" id="BoxMesh_battery"]
 size = Vector3(0.28, 0.72, 0.14)
@@ -171,9 +171,32 @@ size = Vector3(0.16, 0.16, 0.03)
 [node name="Console" type="Node3D"]
 script = ExtResource("1_tk5gh")
 
-[node name="Body" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_body")
+[node name="Body" type="CSGCombiner3D" parent="."]
+use_collision = false
+
+[node name="Shell" type="CSGBox3D" parent="Body"]
+size = Vector3(1.5, 2.3, 0.5)
+material = SubResource("StandardMaterial3D_body")
+
+[node name="ScreenCut" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.22)
+operation = 2
+size = Vector3(1.18, 0.98, 0.18)
+
+[node name="DpadCut" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, -0.42, 0.22)
+operation = 2
+size = Vector3(0.46, 0.46, 0.12)
+
+[node name="BayLeft" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.603, -0.25)
+operation = 2
+size = Vector3(0.78, 0.34, 0.16)
+
+[node name="BayRight" type="CSGBox3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.013, -0.925, -0.25)
+operation = 2
+size = Vector3(0.78, 0.34, 0.16)
 
 [node name="ScreenBezel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0.29)
@@ -322,6 +345,33 @@ surface_material_override/0 = SubResource("StandardMaterial3D_side")
 [node name="Minus" type="MeshInstance3D" parent="Side/VolumeMinus"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 0, 0)
 mesh = SubResource("BoxMesh_mark")
+surface_material_override/0 = SubResource("StandardMaterial3D_mark")
+
+[node name="VolumeMeter" type="Node3D" parent="Side"]
+
+[node name="Pip0" type="MeshInstance3D" parent="Side/VolumeMeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.36, 0.02)
+mesh = SubResource("BoxMesh_pip")
+surface_material_override/0 = SubResource("StandardMaterial3D_mark")
+
+[node name="Pip1" type="MeshInstance3D" parent="Side/VolumeMeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.392, 0.02)
+mesh = SubResource("BoxMesh_pip")
+surface_material_override/0 = SubResource("StandardMaterial3D_mark")
+
+[node name="Pip2" type="MeshInstance3D" parent="Side/VolumeMeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.424, 0.02)
+mesh = SubResource("BoxMesh_pip")
+surface_material_override/0 = SubResource("StandardMaterial3D_mark")
+
+[node name="Pip3" type="MeshInstance3D" parent="Side/VolumeMeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.456, 0.02)
+mesh = SubResource("BoxMesh_pip")
+surface_material_override/0 = SubResource("StandardMaterial3D_mark")
+
+[node name="Pip4" type="MeshInstance3D" parent="Side/VolumeMeter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.785, 0.488, 0.02)
+mesh = SubResource("BoxMesh_pip")
 surface_material_override/0 = SubResource("StandardMaterial3D_mark")
 
 [node name="SlotLeft" type="MeshInstance3D" parent="."]

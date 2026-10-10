@@ -23,6 +23,7 @@ var _spawn := Vector2.ZERO
 var _walk_time := 0.0
 var _idle_time := 0.0
 var _dying := false
+var _jump_armed := true
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -32,13 +33,14 @@ func set_spawn(point: Vector2) -> void:
 	_spawn = point
 	global_position = point
 	velocity = Vector2.ZERO
+	_jump_armed = true
 	collision_layer = 1
 	collision_mask = 1
 
 
-func respawn() -> void:
+func respawn() -> bool:
 	if _dying:
-		return
+		return false
 	_dying = true
 	deaths += 1
 	move_axis = Vector2.ZERO
@@ -47,13 +49,19 @@ func respawn() -> void:
 	velocity = Vector2(0, -780)
 	collision_layer = 0
 	collision_mask = 0
+	return true
 
 
 func try_jump() -> void:
-	if _dying:
+	if _dying or not is_on_floor():
 		return
-	if is_on_floor():
-		velocity.y = jump_velocity
+	velocity.y = jump_velocity
+	if not _jump_armed:
+		return
+	_jump_armed = false
+	var game := get_parent()
+	if game.has_method("play_jump"):
+		game.play_jump()
 
 
 func _physics_process(delta: float) -> void:
@@ -71,6 +79,8 @@ func _physics_process(delta: float) -> void:
 		velocity.y += gravity * delta
 	velocity.x = move_axis.x * speed
 	move_and_slide()
+	if not is_on_floor():
+		_jump_armed = true
 	_animate(delta)
 	if global_position.y > 820.0:
 		respawn()

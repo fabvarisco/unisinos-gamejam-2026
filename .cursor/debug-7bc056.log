@@ -291,3 +291,15 @@
 {"data":{"floor":"(0.5804, 0.8157, 0.8667, 1.0)","found":"560,520"},"hypothesisId":"G","location":"platformMinigame.gd","message":"dest block search","sessionId":"7bc056","timestamp":39869}
 {"data":{"layer":20,"progress":0.0,"size":"(1280.0, 720.0)"},"hypothesisId":"B","location":"platformMinigame.gd","message":"level cover added","sessionId":"7bc056","timestamp":39870}
 {"data":{"dest_block":"(0.0, 0.0, 0.0, 1.0)","frozen_block":"(0.0, 0.0, 0.0, 1.0)","progress":0.114454805850983,"screen_block":""},"hypothesisId":"F","location":"platformMinigame.gd","message":"early tween pixel","sessionId":"7bc056","timestamp":40188}
+{"data":{"covers":1,"end":false,"level":2},"hypothesisId":"A","location":"platformMinigame.gd","message":"next level shown before cover","sessionId":"7bc056","timestamp":30580}
+{"data":{"freeze_size":"(1280.0, 720.0)","frozen":"(0.0, 0.0, 0.0, 1.0)","screen":"(0.0, 0.0, 0.0, 1.0)"},"hypothesisId":"C","location":"platformMinigame.gd","message":"screen after level swap","sessionId":"7bc056","timestamp":30597}
+{"data":{"frozen":"(0.0, 0.0, 0.0, 1.0)","screen":"(0.0, 0.0, 0.0, 1.0)"},"hypothesisId":"E","location":"platformMinigame.gd","message":"block pixel after level swap","sessionId":"7bc056","timestamp":30607}
+{"data":{"floor":"(0.5804, 0.8157, 0.8667, 1.0)","found":"560,520"},"hypothesisId":"G","location":"platformMinigame.gd","message":"dest block search","sessionId":"7bc056","timestamp":30622}
+{"data":{"layer":20,"progress":0.0,"size":"(1280.0, 720.0)"},"hypothesisId":"B","location":"platformMinigame.gd","message":"level cover added","sessionId":"7bc056","timestamp":30622}
+{"data":{"dest_block":"(0.0, 0.0, 0.0, 1.0)","frozen_block":"(0.0, 0.0, 0.0, 1.0)","progress":0.114839784801006,"screen_block":""},"hypothesisId":"F","location":"platformMinigame.gd","message":"early tween pixel","sessionId":"7bc056","timestamp":30962}
+{"data":{"covers":1,"end":false,"level":3},"hypothesisId":"A","location":"platformMinigame.gd","message":"next level shown before cover","sessionId":"7bc056","timestamp":38893}
+{"data":{"freeze_size":"(1280.0, 720.0)","frozen":"(0.0, 0.0, 0.0, 1.0)","screen":"(0.0, 0.0, 0.0, 1.0)"},"hypothesisId":"C","location":"platformMinigame.gd","message":"screen after level swap","sessionId":"7bc056","timestamp":38911}
+{"data":{"frozen":"(0.0, 0.0, 0.0, 1.0)","screen":"(0.0, 0.0, 0.0, 1.0)"},"hypothesisId":"E","location":"platformMinigame.gd","message":"block pixel after level swap","sessionId":"7bc056","timestamp":38922}
+{"data":{"floor":"(0.5804, 0.8157, 0.8667, 1.0)","found":"780,632"},"hypothesisId":"G","location":"platformMinigame.gd","message":"dest block search","sessionId":"7bc056","timestamp":38938}
+{"data":{"layer":20,"progress":0.0,"size":"(1280.0, 720.0)"},"hypothesisId":"B","location":"platformMinigame.gd","message":"level cover added","sessionId":"7bc056","timestamp":38938}
+{"data":{"dest_block":"(0.0, 0.0, 0.0, 1.0)","frozen_block":"(0.0, 0.0, 0.0, 1.0)","progress":0.114839784801006,"screen_block":""},"hypothesisId":"F","location":"platformMinigame.gd","message":"early tween pixel","sessionId":"7bc056","timestamp":39279}

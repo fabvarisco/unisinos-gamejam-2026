@@ -2,6 +2,12 @@ extends Node3D
 
 const DpadButtonScript := preload("res://scripts/dpad_button.gd")
 const PixelTransitionShader := preload("res://shaders/pixel_transition.gdshader")
+const SHAKE_TIME := 0.34
+const MASTER_BUS := "Master"
+const VOLUME_DB_MIN := -40.0
+const VOLUME_DB_MAX := 0.0
+const VOLUME_DB_STEP := 4.0
+const VOLUME_PRESS := 0.014
 
 @export var sensitivity: float = 0.01
 
@@ -29,6 +35,15 @@ var _opening := false
 @onready var _energy_label: Label = $ScreenViewport/ScreenHud/EnergyLabel
 @onready var _batteries: Array[MeshInstance3D] = [$BatteryLeft, $BatteryRight]
 @onready var _screwdriver: Node3D = $Screwdriver
+@onready var _volume_plus: MeshInstance3D = $Side/VolumePlus
+@onready var _volume_minus: MeshInstance3D = $Side/VolumeMinus
+@onready var _volume_pips: Array[MeshInstance3D] = [
+	$Side/VolumeMeter/Pip0,
+	$Side/VolumeMeter/Pip1,
+	$Side/VolumeMeter/Pip2,
+	$Side/VolumeMeter/Pip3,
+	$Side/VolumeMeter/Pip4,
+]
 
 var _bodies: Dictionary = {}
 var _hovered: MeshInstance3D
@@ -38,10 +53,12 @@ var _overlay_red: StandardMaterial3D
 var _burned: StandardMaterial3D
 var _shake := 0.0
 var _rest_position := Vector3.ZERO
+var _volume_db := VOLUME_DB_MAX
+var _volume_pip_on: StandardMaterial3D
+var _volume_rest: Dictionary = {}
+var _volume_tweens: Dictionary = {}
 var _hold_layer: CanvasLayer
 var _capture: SubViewport
-
-const SHAKE_TIME := 0.34
 
 
 func _ready() -> void:
@@ -60,7 +77,18 @@ func _ready() -> void:
 	_add_cylinder_hitbox($Side/ContrastWheel)
 	_add_hitbox($Side/VolumePlus, "", true)
 	_add_hitbox($Side/VolumeMinus, "", true)
-	_add_blocker($Body)
+	_volume_pip_on = StandardMaterial3D.new()
+	_volume_pip_on.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_volume_pip_on.albedo_color = Color(0.55, 0.95, 0.4)
+	_volume_pip_on.emission_enabled = true
+	_volume_pip_on.emission = Color(0.4, 0.85, 0.3)
+	_volume_pip_on.emission_energy_multiplier = 1.2
+	_volume_rest[_volume_plus] = _volume_plus.position
+	_volume_rest[_volume_minus] = _volume_minus.position
+	_volume_db = _volume_db_from_bus()
+	_apply_master_volume()
+	_refresh_volume_pips()
+	_add_blocker($Body, Vector3(1.5, 2.3, 0.5))
 	_game_select.set_shown(false)
 	_platform.begin()
 	_platform.visible = true
@@ -133,6 +161,9 @@ func _process(frame_delta: float) -> void:
 			return
 		if _dpad_axis(mouse) != Vector2.ZERO:
 			_pressing_dpad = true
+			return
+		if _adjust_volume(mouse):
+			_pressing_button = true
 			return
 		if _press_front_button(mouse):
 			_pressing_button = true
@@ -210,6 +241,55 @@ func _update_jump() -> void:
 	var wired: bool = _holding_a and _wire.is_live("PadA")
 	if stuck or wired:
 		_player.try_jump()
+
+
+func _adjust_volume(mouse: Vector2) -> bool:
+	var mesh := _mesh_under(mouse)
+	if mesh != _volume_plus and mesh != _volume_minus:
+		return false
+	var direction := -1.0 if mesh == _volume_minus else 1.0
+	_volume_db = clampf(_volume_db + direction * VOLUME_DB_STEP, VOLUME_DB_MIN, VOLUME_DB_MAX)
+	_apply_master_volume()
+	_refresh_volume_pips()
+	_press_volume_button(mesh)
+	return true
+
+
+func _volume_db_from_bus() -> float:
+	var bus := AudioServer.get_bus_index(MASTER_BUS)
+	if bus < 0:
+		return VOLUME_DB_MAX
+	var db := AudioServer.get_bus_volume_db(bus)
+	if is_nan(db) or is_inf(db):
+		return VOLUME_DB_MIN if db < 0.0 else VOLUME_DB_MAX
+	var steps := roundi((db - VOLUME_DB_MIN) / VOLUME_DB_STEP)
+	return clampf(VOLUME_DB_MIN + float(steps) * VOLUME_DB_STEP, VOLUME_DB_MIN, VOLUME_DB_MAX)
+
+
+func _apply_master_volume() -> void:
+	var bus := AudioServer.get_bus_index(MASTER_BUS)
+	if bus < 0:
+		return
+	AudioServer.set_bus_volume_db(bus, _volume_db)
+
+
+func _refresh_volume_pips() -> void:
+	var steps := roundi((_volume_db - VOLUME_DB_MIN) / VOLUME_DB_STEP)
+	var lit := clampi(int(float(steps * _volume_pips.size()) / 10.0), 0, _volume_pips.size())
+	for index in _volume_pips.size():
+		_volume_pips[index].material_override = _volume_pip_on if index < lit else null
+
+
+func _press_volume_button(mesh: MeshInstance3D) -> void:
+	var rest: Vector3 = _volume_rest[mesh]
+	var active: Tween = _volume_tweens.get(mesh)
+	if active != null and active.is_valid():
+		active.kill()
+	mesh.position = rest
+	var tween := create_tween()
+	_volume_tweens[mesh] = tween
+	tween.tween_property(mesh, "position", rest + Vector3(-VOLUME_PRESS, 0.0, 0.0), 0.05)
+	tween.tween_property(mesh, "position", rest, 0.08)
 
 
 func _press_front_button(mouse: Vector2) -> bool:
@@ -539,15 +619,15 @@ func _snapshot_screen() -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
-func _add_blocker(mesh: MeshInstance3D) -> void:
+func _add_blocker(host: Node3D, box_size: Vector3) -> void:
 	var body := StaticBody3D.new()
 	body.collision_mask = 0
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = (mesh.mesh as BoxMesh).size
+	box.size = box_size
 	shape.shape = box
 	body.add_child(shape)
-	mesh.add_child(body)
+	host.add_child(body)
 
 
 func _add_hitbox(mesh: MeshInstance3D, pad_name: String, live := false) -> void:

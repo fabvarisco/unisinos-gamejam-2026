@@ -2,9 +2,15 @@ extends Node2D
 
 const SPAWN := Vector2(160, 607)
 const LEVEL_COUNT := 9
+const _SFX_GAIN := 0.55
 const MonsterScript := preload("res://minigames/platform/monsterPlatform.gd")
 const CoinScript := preload("res://minigames/platform/coinPlatform.gd")
 const PixelTransitionShader := preload("res://shaders/pixel_transition.gdshader")
+const _JUMP_SFX: AudioStream = preload("res://minigames/platform/audio/jump.wav")
+const _COIN_SFX: AudioStream = preload("res://minigames/platform/audio/coin.wav")
+const _ENEMY_SFX: AudioStream = preload("res://minigames/platform/audio/enemy.wav")
+const _LEVEL_SFX: AudioStream = preload("res://minigames/platform/audio/level_complete.wav")
+const _GAME_SFX: AudioStream = preload("res://minigames/platform/audio/game_complete.wav")
 
 var _level := 1
 var _done := false
@@ -14,6 +20,11 @@ var _run := 0
 var _coins := 0
 var _level_coins := 0
 var _hold_layer: CanvasLayer
+var _jump_player: AudioStreamPlayer
+var _coin_player: AudioStreamPlayer
+var _enemy_player: AudioStreamPlayer
+var _level_player: AudioStreamPlayer
+var _game_player: AudioStreamPlayer
 
 @onready var _level_map: TileMapLayer = $LevelPlatform
 @onready var _player: CharacterBody2D = $PlayerPlatform
@@ -22,6 +33,30 @@ var _hold_layer: CanvasLayer
 @onready var _coins_end_label: Label = $Hud/EndScreen/Coins
 @onready var _time_label: Label = $Hud/EndScreen/Time
 @onready var _coins_label: Label = $Hud/Coins
+
+
+func _ready() -> void:
+	_jump_player = _add_sfx(_JUMP_SFX)
+	_coin_player = _add_sfx(_COIN_SFX)
+	_enemy_player = _add_sfx(_ENEMY_SFX)
+	_level_player = _add_sfx(_LEVEL_SFX)
+	_game_player = _add_sfx(_GAME_SFX)
+
+
+func _add_sfx(stream: AudioStream) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = linear_to_db(_SFX_GAIN)
+	add_child(player)
+	return player
+
+
+func play_jump() -> void:
+	_jump_player.play()
+
+
+func play_enemy() -> void:
+	_enemy_player.play()
 
 
 func begin() -> void:
@@ -164,6 +199,7 @@ func _add_coin(spot: Vector2) -> void:
 func _on_coin_collected() -> void:
 	_coins += 1
 	_refresh_coins()
+	_coin_player.play()
 
 
 func _refresh_coins() -> void:
@@ -195,9 +231,11 @@ func _change_level() -> void:
 	_freeze(from_tex)
 	if _level >= LEVEL_COUNT:
 		_done = true
+		_game_player.play()
 		_show_ending()
 		_player.velocity = Vector2.ZERO
 	else:
+		_level_player.play()
 		_start_level(_level + 1)
 		_set_actors_active(false)
 	# #region agent log
