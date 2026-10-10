@@ -1,8 +1,8 @@
-[gd_scene load_steps=26 format=3 uid="uid://cyc8jkarejvuq"]
+[gd_scene load_steps=28 format=3 uid="uid://cyc8jkarejvuq"]
 
 [ext_resource type="Script" uid="uid://dvc3gucjgqk4t" path="res://scripts/console.gd" id="1_console"]
 [ext_resource type="Script" uid="uid://cd8dgj3te2a40" path="res://scripts/view.gd" id="2_view"]
-[ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://platform_game.tscn" id="3_platform"]
+[ext_resource type="PackedScene" uid="uid://n1ywxvrth43e" path="res://scenes/platform_game.tscn" id="3_platform"]
 [ext_resource type="Script" path="res://scripts/screen.gd" id="4_screen"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -53,6 +53,12 @@ roughness = 0.65
 
 [sub_resource type="BoxMesh" id="BoxMesh_dpad_v"]
 size = Vector3(0.1, 0.32, 0.08)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dpad_h"]
+size = Vector3(0.32, 0.1, 0.12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dpad_v"]
+size = Vector3(0.1, 0.32, 0.12)
 
 [sub_resource type="BoxMesh" id="BoxMesh_button"]
 size = Vector3(0.14, 0.14, 0.08)
@@ -135,15 +141,23 @@ mesh = SubResource("BoxMesh_screen")
 surface_material_override/0 = SubResource("StandardMaterial3D_screen")
 script = ExtResource("4_screen")
 
-[node name="DpadHorizontal" type="MeshInstance3D" parent="Console"]
+[node name="Dpad" type="StaticBody3D" parent="Console"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, -0.42, 0.29)
+collision_mask = 0
+
+[node name="DpadHorizontal" type="MeshInstance3D" parent="Console/Dpad"]
 mesh = SubResource("BoxMesh_dpad_h")
 surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
 
-[node name="DpadVertical" type="MeshInstance3D" parent="Console"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, -0.42, 0.29)
+[node name="HitHorizontal" type="CollisionShape3D" parent="Console/Dpad"]
+shape = SubResource("BoxShape3D_dpad_h")
+
+[node name="DpadVertical" type="MeshInstance3D" parent="Console/Dpad"]
 mesh = SubResource("BoxMesh_dpad_v")
 surface_material_override/0 = SubResource("StandardMaterial3D_dpad")
+
+[node name="HitVertical" type="CollisionShape3D" parent="Console/Dpad"]
+shape = SubResource("BoxShape3D_dpad_v")
 
 [node name="ButtonA" type="MeshInstance3D" parent="Console"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, -0.28, 0.29)
